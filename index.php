@@ -55,6 +55,25 @@
     function volta($array)
     {
         $array[1] = preg_replace('/\s+/', ' ', $array[1]);
+        $array[1] = str_replace('0', '', $array[1]);
+        $array[1] = str_replace('+1', '', $array[1]);
+        $array[1] = str_replace('+2', '', $array[1]);
+        $array[1] = str_replace('+3', '', $array[1]);
+        $array[1] = str_replace('+4', '', $array[1]);
+        $array[1] = str_replace('+5', '', $array[1]);
+        $array[1] = str_replace('+6', '', $array[1]);
+        $array[1] = str_replace('+7', '', $array[1]);
+        $array[1] = str_replace('+8', '', $array[1]);
+        $array[1] = str_replace('+9', '', $array[1]);
+        $array[1] = str_replace('-1', '', $array[1]);
+        $array[1] = str_replace('-2', '', $array[1]);
+        $array[1] = str_replace('-3', '', $array[1]);
+        $array[1] = str_replace('-4', '', $array[1]);
+        $array[1] = str_replace('-5', '', $array[1]);
+        $array[1] = str_replace('-6', '', $array[1]);
+        $array[1] = str_replace('-7', '', $array[1]);
+        $array[1] = str_replace('-8', '', $array[1]);
+        $array[1] = str_replace('-9', '', $array[1]);
 
 
         $tabela = array(
@@ -95,9 +114,9 @@
             volta($time_array[29]),
             volta($time_array[31]),
             volta($time_array[33]),
-            volta($time_array[35])
-            // volta($time_array[37]),
-            // volta($time_array[39])
+            volta($time_array[35]),
+            volta($time_array[37]),
+            volta($time_array[39])
         );
 
     echo "<pre>";
