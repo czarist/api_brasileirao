@@ -76,7 +76,7 @@
         $array[1] = str_replace('-9', '', $array[1]);
 
 
-        $tabela = array(
+        $tabela = [
             $array[1],
             $array[3],
             $array[5],
@@ -91,7 +91,7 @@
             $array[23]
             // $array[25],
             // $array[27]
-        );
+        ];
         return $tabela;
     }
 
