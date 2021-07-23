@@ -1,0 +1,8 @@
+body {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 900px;
+  background-color: #212121;
+  margin: 0;
+}
