@@ -1,9 +1,14 @@
 <?php
-libxml_use_internal_errors(true);
+// o link precisa ser: www.URL.com.br/model.php?key=123456
+
+
 
 $link = "https://www.cbf.com.br/futebol-brasileiro/competicoes/campeonato-brasileiro-serie-a/2021";
-$url = 'html-' . date("m.d.y")  . '.html';
+$url = $link;
 $time_array = getdata($url);
+
+
+
 
 function tdrows($elements)
 {
@@ -16,54 +21,105 @@ function tdrows($elements)
 
 function getdata($contents)
 {
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $contents);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    $content = curl_exec($ch);
+    if (curl_errno($ch)) {
+        echo curl_error($ch);
+    } else {
+        $file = 'content.html';
+
+        $fh = fopen($file, 'w');
+
+        if (!$fh) {
+            echo "Unable to create $file";
+        } else {
+            fwrite($fh, $content);
+
+
+            echo "Saved $file";
+
+            fclose($fh);
+        }
+    }
+
     $DOM = new DOMDocument;
-    $DOM->loadHTMLFile($contents);
+    $DOM->loadHTMLFile($file);
     $items = $DOM->getElementsByTagName('tr');
     $return = array();
     foreach ($items as $node) {
         $return[] = tdrows($node->childNodes);
     }
+    curl_close($ch);
 
     return $return;
 }
 
+
+
+//Retorna os arrays internos na sequencia certa da DOM
 function volta($array)
 {
-    $array[1] = preg_replace('/\s+/', ' ', $array[1]);
-    $array[1] = str_replace('0', '', $array[1]);
-    $array[1] = str_replace('+1', '', $array[1]);
-    $array[1] = str_replace('+2', '', $array[1]);
-    $array[1] = str_replace('+3', '', $array[1]);
-    $array[1] = str_replace('+4', '', $array[1]);
-    $array[1] = str_replace('+5', '', $array[1]);
-    $array[1] = str_replace('+6', '', $array[1]);
-    $array[1] = str_replace('+7', '', $array[1]);
-    $array[1] = str_replace('+8', '', $array[1]);
-    $array[1] = str_replace('+9', '', $array[1]);
-    $array[1] = str_replace('-1', '', $array[1]);
-    $array[1] = str_replace('-2', '', $array[1]);
-    $array[1] = str_replace('-3', '', $array[1]);
-    $array[1] = str_replace('-4', '', $array[1]);
-    $array[1] = str_replace('-5', '', $array[1]);
-    $array[1] = str_replace('-6', '', $array[1]);
-    $array[1] = str_replace('-7', '', $array[1]);
-    $array[1] = str_replace('-8', '', $array[1]);
-    $array[1] = str_replace('-9', '', $array[1]);
+    $array[0] = preg_replace('/\s+/', ' ', $array[0]);
+    $array[0] = str_replace('0', '', $array[0]);
+    $array[0] = str_replace('+1', '', $array[0]);
+    $array[0] = str_replace('+2', '', $array[0]);
+    $array[0] = str_replace('+3', '', $array[0]);
+    $array[0] = str_replace('+4', '', $array[0]);
+    $array[0] = str_replace('+5', '', $array[0]);
+    $array[0] = str_replace('+6', '', $array[0]);
+    $array[0] = str_replace('+7', '', $array[0]);
+    $array[0] = str_replace('+8', '', $array[0]);
+    $array[0] = str_replace('+9', '', $array[0]);
+    $array[0] = str_replace('-1', '', $array[0]);
+    $array[0] = str_replace('-2', '', $array[0]);
+    $array[0] = str_replace('-3', '', $array[0]);
+    $array[0] = str_replace('-4', '', $array[0]);
+    $array[0] = str_replace('-5', '', $array[0]);
+    $array[0] = str_replace('-6', '', $array[0]);
+    $array[0] = str_replace('-7', '', $array[0]);
+    $array[0] = str_replace('-8', '', $array[0]);
+    $array[0] = str_replace('-9', '', $array[0]);
+    $array[0] = str_replace('1º', '', $array[0]);
+    $array[0] = str_replace('2º', '', $array[0]);
+    $array[0] = str_replace('3º', '', $array[0]);
+    $array[0] = str_replace('4º', '', $array[0]);
+    $array[0] = str_replace('5º', '', $array[0]);
+    $array[0] = str_replace('6º', '', $array[0]);
+    $array[0] = str_replace('7º', '', $array[0]);
+    $array[0] = str_replace('8º', '', $array[0]);
+    $array[0] = str_replace('9º', '', $array[0]);
+    $array[0] = str_replace('1', '', $array[0]);
+    $array[0] = str_replace('2', '', $array[0]);
+    $array[0] = str_replace('3', '', $array[0]);
+    $array[0] = str_replace('4', '', $array[0]);
+    $array[0] = str_replace('5', '', $array[0]);
+    $array[0] = str_replace('6', '', $array[0]);
+    $array[0] = str_replace('7', '', $array[0]);
+    $array[0] = str_replace('8', '', $array[0]);
+    $array[0] = str_replace('9', '', $array[0]);
+    $array[0] = preg_replace('/\s+/', ' ', $array[0]);
+
+
+
 
 
     $tabela = [
-        'Equipe' => $array[1],
-        'PTS' => $array[3],
-        'J' => $array[5],
-        'V' => $array[7],
-        'E' => $array[9],
-        'D' => $array[11],
-        'GP' => $array[13],
-        'GC' => $array[15],
-        'SG' => $array[17],
-        'CA' => $array[19],
-        'CV' => $array[21],
-        'POR' => $array[23]
+        'Equipe' => $array[0],
+        'PTS' => $array[2],
+        'J' => $array[4],
+        'V' => $array[6],
+        'E' => $array[8],
+        'D' => $array[10],
+        'GP' => $array[12],
+        'GC' => $array[14],
+        'SG' => $array[16],
+        'CA' => $array[18],
+        'CV' => $array[20],
+        'POR' => $array[22]
         // $array[25],
         // $array[27]
     ];
@@ -71,6 +127,7 @@ function volta($array)
     return $tabela;
 }
 
+//volta os Arrays externos na ordem certa na sequencia da DOM
 $time_master =
     array(
         volta($time_array[1]),
@@ -95,6 +152,6 @@ $time_master =
         volta($time_array[39])
     );
 
-
-
-libxml_use_internal_errors(false);
+echo '<pre>';
+print_r($time_array);
+echo '</pre>';
