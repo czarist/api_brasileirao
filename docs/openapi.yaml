@@ -1,0 +1,520 @@
+openapi: 3.1.0
+info:
+  title: API Brasileirão
+  version: 0.1.0
+  summary: Read-only Campeonato Brasileiro Série A API.
+  description: |
+    Public read API for data collected from the CBF public site and stored in PostgreSQL.
+    This project is not affiliated with the CBF, any club, or any broadcaster.
+
+    The API does not scrape on request and does not promise live scores. The worker collects
+    a season on its interval (one hour by default). A payload with `stale: true` is the last
+    successful collection, either because that collection is older than the configured window
+    or because a later collection failed. `collection_status: never_collected` means no
+    successful collection has been stored. Unknown scores and unknown kickoffs are null.
+    The standings figures are the official table, including a goal difference that may not
+    equal goals for minus goals against. `in_progress` is reserved and is not emitted by the
+    current collector.
+servers:
+  - url: http://localhost:8080
+    description: Local Docker Compose API
+tags:
+  - name: Health
+  - name: Metadata
+  - name: Competition
+paths:
+  /:
+    get:
+      tags: [Metadata]
+      summary: API index
+      operationId: getIndex
+      responses:
+        "200":
+          description: Links to the contract and the collection.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name, docs, openapi, health, api]
+                properties:
+                  name: {type: string, examples: [api-brasileirao]}
+                  docs: {type: string, examples: ["/docs"]}
+                  openapi: {type: string, examples: ["/openapi.yaml"]}
+                  health: {type: string, examples: ["/health/live"]}
+                  api: {type: string, examples: ["/api/v1/competitions"]}
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Process is running
+      operationId: getLive
+      responses:
+        "200":
+          description: The process is up. This check does not call the database or the source.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Health"}
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Database accepts a query
+      operationId: getReady
+      responses:
+        "200":
+          description: PostgreSQL answered a ping. The source site is not called.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Health"}
+        "503":
+          description: The database is unreachable.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/HealthUnavailable"}
+  /openapi.yaml:
+    get:
+      tags: [Metadata]
+      summary: This document
+      operationId: getOpenAPI
+      responses:
+        "200":
+          description: OpenAPI document.
+          content:
+            application/yaml:
+              schema: {type: string}
+  /docs:
+    get:
+      tags: [Metadata]
+      summary: Swagger UI
+      operationId: getDocs
+      responses:
+        "200":
+          description: Swagger UI HTML. Static assets are served only from /docs/assets.
+          content:
+            text/html:
+              schema: {type: string}
+  /api/v1/competitions:
+    get:
+      tags: [Competition]
+      summary: List competitions
+      operationId: listCompetitions
+      responses:
+        "200":
+          description: Stored competitions. An empty list means nothing has been published yet.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Competition"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}:
+    get:
+      tags: [Competition]
+      summary: Get a competition
+      operationId: getCompetition
+      parameters:
+        - $ref: "#/components/parameters/Code"
+      responses:
+        "200":
+          description: The competition.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data: {$ref: "#/components/schemas/Competition"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}/seasons:
+    get:
+      tags: [Competition]
+      summary: List seasons
+      operationId: listSeasons
+      parameters:
+        - $ref: "#/components/parameters/Code"
+      responses:
+        "200":
+          description: Seasons of the competition.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Season"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}/seasons/{year}:
+    get:
+      tags: [Competition]
+      summary: Get a season
+      operationId: getSeason
+      parameters:
+        - $ref: "#/components/parameters/Code"
+        - $ref: "#/components/parameters/Year"
+      responses:
+        "200":
+          description: The season.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data: {$ref: "#/components/schemas/Season"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}/seasons/{year}/teams:
+    get:
+      tags: [Competition]
+      summary: List clubs in a season
+      operationId: listTeams
+      parameters:
+        - $ref: "#/components/parameters/Code"
+        - $ref: "#/components/parameters/Year"
+      responses:
+        "200":
+          description: Clubs. This list is not paginated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Team"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}/seasons/{year}/standings:
+    get:
+      tags: [Competition]
+      summary: Official standings
+      operationId: listStandings
+      parameters:
+        - $ref: "#/components/parameters/Code"
+        - $ref: "#/components/parameters/Year"
+      responses:
+        "200":
+          description: Official table in position order. Points are not recalculated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Standing"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}/seasons/{year}/rounds:
+    get:
+      tags: [Competition]
+      summary: List rounds
+      operationId: listRounds
+      parameters:
+        - $ref: "#/components/parameters/Code"
+        - $ref: "#/components/parameters/Year"
+      responses:
+        "200":
+          description: Rounds in number order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: "#/components/schemas/Round"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/competitions/{code}/seasons/{year}/matches:
+    get:
+      tags: [Competition]
+      summary: List matches
+      operationId: listMatches
+      parameters:
+        - $ref: "#/components/parameters/Code"
+        - $ref: "#/components/parameters/Year"
+        - name: round
+          in: query
+          schema: {type: integer, minimum: 1}
+        - name: team_id
+          in: query
+          description: Internal club id. A filter with no rows returns an empty page.
+          schema: {type: integer, minimum: 1}
+        - name: status
+          in: query
+          schema: {$ref: "#/components/schemas/MatchStatus"}
+        - name: from
+          in: query
+          schema: {type: string, format: date-time}
+        - name: to
+          in: query
+          schema: {type: string, format: date-time}
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Matches ordered by kickoff, with unknown kickoffs last, then by id.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MatchPage"}
+              examples:
+                scheduled:
+                  value:
+                    data:
+                      - id: 4
+                        match_number: 210
+                        kickoff_at: null
+                        status: postponed
+                        home_score: null
+                        away_score: null
+                        home_penalties: null
+                        away_penalties: null
+                        venue: null
+                        city: null
+                        state: null
+                        round_number: 21
+                        phase: Fase Única
+                        round_name: Round 21
+                        home: {id: 1, name: Chapecoense, short_name: CHA, state: SC}
+                        away: {id: 2, name: Vasco da Gama Saf, short_name: VAS, state: RJ}
+                        collected_at: "2026-10-30T15:00:00Z"
+                        updated_at: "2026-10-30T15:00:00Z"
+                    page: 1
+                    page_size: 20
+                    total: 1
+                    source:
+                      name: cbf
+                      collected_at: "2026-10-30T15:00:00Z"
+                      last_success_at: "2026-10-30T15:00:00Z"
+                      stale: false
+                      collection_status: ok
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+  /api/v1/matches/{id}:
+    get:
+      tags: [Competition]
+      summary: Get one match
+      operationId: getMatch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer, minimum: 1}
+      responses:
+        "200":
+          description: The match.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, source]
+                properties:
+                  data: {$ref: "#/components/schemas/Match"}
+                  source: {$ref: "#/components/schemas/Source"}
+        "400": {$ref: "#/components/responses/Invalid"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "429": {$ref: "#/components/responses/RateLimited"}
+        "503": {$ref: "#/components/responses/Unavailable"}
+components:
+  parameters:
+    Code:
+      name: code
+      in: path
+      required: true
+      schema: {type: string, examples: [brasileirao-serie-a]}
+    Year:
+      name: year
+      in: path
+      required: true
+      schema: {type: integer, minimum: 1990, maximum: 2100, examples: [2026]}
+    Page:
+      name: page
+      in: query
+      schema: {type: integer, minimum: 1, default: 1}
+    PageSize:
+      name: page_size
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+  responses:
+    Invalid:
+      description: A path or query parameter is invalid.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    NotFound:
+      description: The competition, season, or match does not exist.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    RateLimited:
+      description: The client exceeded the request limit.
+      headers:
+        Retry-After:
+          schema: {type: integer, examples: [1]}
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    Unavailable:
+      description: The database cannot serve the request. The message stays generic.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: {type: string, examples: [ok]}
+    HealthUnavailable:
+      type: object
+      required: [status]
+      properties:
+        status: {type: string, examples: [unavailable]}
+    Error:
+      type: object
+      required: [code, message, request_id]
+      properties:
+        code: {type: string, examples: [not_found]}
+        message: {type: string}
+        request_id: {type: string}
+    Source:
+      type: object
+      required: [name, collected_at, last_success_at, stale, collection_status]
+      properties:
+        name: {type: string, examples: [cbf]}
+        collected_at:
+          type: [string, "null"]
+          format: date-time
+        last_success_at:
+          type: [string, "null"]
+          format: date-time
+        stale: {type: boolean}
+        collection_status:
+          type: string
+          enum: [ok, never_collected]
+    Competition:
+      type: object
+      required: [id, code, name]
+      properties:
+        id: {type: integer}
+        code: {type: string}
+        name: {type: string}
+    Season:
+      type: object
+      required: [year, name, external_id]
+      properties:
+        year: {type: integer}
+        name: {type: string}
+        external_id: {type: string}
+    Team:
+      type: object
+      required: [id, name, short_name, state]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        short_name: {type: string}
+        state:
+          type: [string, "null"]
+    Standing:
+      type: object
+      required: [position, team, played, wins, draws, losses, goals_for, goals_against, goal_difference, points, yellow_cards, red_cards, win_percentage]
+      properties:
+        position: {type: integer}
+        team: {$ref: "#/components/schemas/Team"}
+        played: {type: integer}
+        wins: {type: integer}
+        draws: {type: integer}
+        losses: {type: integer}
+        goals_for: {type: integer}
+        goals_against: {type: integer}
+        goal_difference: {type: integer}
+        points: {type: integer}
+        yellow_cards: {type: integer}
+        red_cards: {type: integer}
+        win_percentage: {type: integer}
+    Round:
+      type: object
+      required: [number, phase, name, match_count]
+      properties:
+        number: {type: integer}
+        phase: {type: string}
+        name: {type: string}
+        match_count: {type: integer}
+    MatchStatus:
+      type: string
+      enum: [scheduled, in_progress, finished, postponed, suspended, cancelled]
+    Match:
+      type: object
+      required: [id, match_number, kickoff_at, status, home_score, away_score, home_penalties, away_penalties, venue, city, state, round_number, phase, round_name, home, away, collected_at, updated_at]
+      properties:
+        id: {type: integer}
+        match_number:
+          type: [integer, "null"]
+        kickoff_at:
+          type: [string, "null"]
+          format: date-time
+        status: {$ref: "#/components/schemas/MatchStatus"}
+        home_score:
+          type: [integer, "null"]
+        away_score:
+          type: [integer, "null"]
+        home_penalties:
+          type: [integer, "null"]
+        away_penalties:
+          type: [integer, "null"]
+        venue:
+          type: [string, "null"]
+        city:
+          type: [string, "null"]
+        state:
+          type: [string, "null"]
+        round_number: {type: integer}
+        phase: {type: string}
+        round_name: {type: string}
+        home: {$ref: "#/components/schemas/Team"}
+        away: {$ref: "#/components/schemas/Team"}
+        collected_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    MatchPage:
+      type: object
+      required: [data, page, page_size, total, source]
+      properties:
+        data:
+          type: array
+          items: {$ref: "#/components/schemas/Match"}
+        page: {type: integer}
+        page_size: {type: integer}
+        total: {type: integer}
+        source: {$ref: "#/components/schemas/Source"}
