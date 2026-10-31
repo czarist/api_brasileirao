@@ -16,8 +16,8 @@ info:
     equal goals for minus goals against. `in_progress` is reserved and is not emitted by the
     current collector.
 servers:
-  - url: http://localhost:8080
-    description: Local Docker Compose API
+  - url: /
+    description: The API that served this document
 tags:
   - name: Health
   - name: Metadata

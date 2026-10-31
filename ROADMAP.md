@@ -92,6 +92,7 @@ Depends on: phases 4 to 6.
 - [x] Postgres integration test for idempotent upsert and preservation after a failed run.
 - [x] Rate limit, CORS, parameterized SQL, non-root container.
 - [x] Update outdated Go dependencies and align build/test images with Go 1.26.
+- [x] Exclude HTML files from GitHub language statistics while keeping required files tracked.
 - [ ] GitHub Actions runs format, `go vet`, `go test -race`, `govulncheck`, OpenAPI, and image build.
 
 Acceptance: `gofmt -l` is empty, `go vet ./...` and `go test ./...` pass, and `govulncheck ./...` reports no known vulnerabilities with Go 1.26. Earlier, the Docker test profile passed `go test -race ./...`; that check could not be rerun because the Docker daemon is unavailable in this environment and local cgo is disabled. `make check` was not run because `make` is not installed. The workflow file was not executed on GitHub.
