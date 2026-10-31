@@ -62,9 +62,10 @@ services:
     entrypoint: ["/app/worker"]
     environment:
       DATABASE_URL: postgres://brasileirao:brasileirao@postgres:5432/brasileirao?sslmode=disable
-      SYNC_COMPETITION: brasileirao-serie-a
-      SYNC_YEAR: "2026"
+      SYNC_COMPETITION: all
+      SYNC_YEARS: all
       SYNC_INTERVAL: 1h
+      SYNC_TIMEOUT: 3m
       SOURCE_BASE_URL: https://www.cbf.com.br
       SOURCE_MIN_INTERVAL: 1s
       LOG_LEVEL: info

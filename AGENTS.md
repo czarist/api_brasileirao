@@ -8,9 +8,10 @@ Talk to the maintainer in whatever language they use.
 
 ## Context and architecture
 
-Public read API for the Campeonato Brasileiro. The supported competition in this
-MVP is Série A. Data is collected from the CBF public site and stored in
-PostgreSQL. HTTP handlers only read the database.
+Public read API for the Campeonato Brasileiro. The supported competitions are
+Série A, Série B, Série C, and Série D, for every year the CBF catalog lists.
+Data is collected from the CBF public site and stored in PostgreSQL. HTTP
+handlers only read the database.
 
 ```
 CBF public HTTP  ->  scraper adapter  ->  validation  ->  PostgreSQL  ->  API
@@ -78,6 +79,8 @@ service without a demonstrated need.
 - Parser changes need fixture and test updates.
 - Default tests must not call the CBF website. Live checks are opt-in with `CBF_LIVE=1`.
 - Source URLs come from configuration and fixed path templates. Do not pass a client-supplied URL to the fetcher.
+- Standings come from the division year page. When that page has no table, the collector follows the first points phase on the page and skips knockout phases.
+- Do not call `cms.cbf.com.br` or keep a bearer token found in page scripts.
 - Respect `Retry-After`, the configured request interval, and response size limits. Do not bypass CAPTCHA, authentication, or access controls.
 
 ## Verification

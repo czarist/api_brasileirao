@@ -25,7 +25,7 @@ type Gate interface {
 
 // Collector downloads and parses one season.
 type Collector interface {
-	Fetch(ctx context.Context, year int, collected time.Time) (domain.Snapshot, error)
+	Fetch(ctx context.Context, competition string, year int, collected time.Time) (domain.Snapshot, error)
 }
 
 // Syncer publishes a validated snapshot or keeps the previous rows.
@@ -33,6 +33,7 @@ type Syncer struct {
 	gate      Gate
 	collector Collector
 	limits    domain.Limits
+	limitsFor func(competition string) (domain.Limits, bool)
 	log       *slog.Logger
 	now       func() time.Time
 }
@@ -43,6 +44,12 @@ func New(gate Gate, collector Collector, limits domain.Limits, log *slog.Logger)
 		log = slog.Default()
 	}
 	return &Syncer{gate: gate, collector: collector, limits: limits, log: log, now: time.Now}
+}
+
+// SetLimitsFor uses a competition's own size limits when the function recognizes it.
+// Tests leave this unset so a small fixture can still publish.
+func (s *Syncer) SetLimitsFor(fn func(competition string) (domain.Limits, bool)) {
+	s.limitsFor = fn
 }
 
 // Sync collects one competition season. A failed collection does not publish.
@@ -56,11 +63,20 @@ func (s *Syncer) Sync(ctx context.Context, competition string, year int) error {
 	}
 	defer session.Close()
 	s.log.Info("sync started", "competition", competition, "year", year)
-	snap, err := s.collector.Fetch(ctx, year, s.now().UTC())
+	snap, err := s.collector.Fetch(ctx, competition, year, s.now().UTC())
 	if err != nil {
 		return s.fail(ctx, session, competition, year, err)
 	}
-	if err := snap.Validate(s.limits); err != nil {
+	if snap.CompetitionCode != competition {
+		return s.fail(ctx, session, competition, year, fmt.Errorf("snapshot competition %s does not match %s: %w", snap.CompetitionCode, competition, domain.ErrInvalid))
+	}
+	limits := s.limits
+	if s.limitsFor != nil {
+		if custom, ok := s.limitsFor(competition); ok {
+			limits = custom
+		}
+	}
+	if err := snap.Validate(limits); err != nil {
 		return s.fail(ctx, session, competition, year, err)
 	}
 	if err := session.Apply(ctx, snap); err != nil {

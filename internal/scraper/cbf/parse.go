@@ -16,9 +16,29 @@ import (
 
 var teamHref = regexp.MustCompile(`/times/.+/(\d+)$`)
 
-// ParseStandings reads the official table. The club id is the /times/ link that
-// wraps the team name, not a later link such as the next opponent.
+// ParseStandings reads the official table. Embedded classification groups win
+// when they contain at least as many rows as the HTML table. The club id in the
+// HTML table is the /times/ link that wraps the team name, not a later link
+// such as the next opponent.
 func ParseStandings(body []byte) ([]domain.StandingInput, map[string]string, error) {
+	if len(bytes.TrimSpace(body)) == 0 {
+		return nil, nil, fmt.Errorf("standings page is empty")
+	}
+	embedded, embeddedNames, embeddedErr := parseEmbedded(body)
+	if embeddedErr != nil {
+		return nil, nil, embeddedErr
+	}
+	htmlRows, htmlNames, htmlErr := parseHTMLStandings(body)
+	if len(embedded) > 0 && (htmlErr != nil || len(embedded) >= len(htmlRows)) {
+		return embedded, embeddedNames, nil
+	}
+	if htmlErr != nil {
+		return nil, nil, htmlErr
+	}
+	return htmlRows, htmlNames, nil
+}
+
+func parseHTMLStandings(body []byte) ([]domain.StandingInput, map[string]string, error) {
 	if len(bytes.TrimSpace(body)) == 0 {
 		return nil, nil, fmt.Errorf("standings page is empty")
 	}

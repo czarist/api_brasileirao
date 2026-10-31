@@ -118,20 +118,20 @@ func (s *Store) ListTeams(ctx context.Context, code string, year int) ([]domain.
 	return out, meta, nil
 }
 
-// ListStandings returns the official table in position order.
+// ListStandings returns the official table in group order, then position.
 func (s *Store) ListStandings(ctx context.Context, code string, year int) ([]domain.Standing, domain.SourceMeta, error) {
 	id, meta, err := s.requireSeason(ctx, code, year)
 	if err != nil {
 		return nil, domain.SourceMeta{}, err
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT st.position, t.id, t.name, t.short_name, COALESCE(t.state, ''),
+		SELECT st.group_name, st.group_order, st.position, t.id, t.name, t.short_name, COALESCE(t.state, ''),
 		       st.played, st.wins, st.draws, st.losses, st.goals_for, st.goals_against,
 		       st.goal_difference, st.points, st.yellow_cards, st.red_cards, st.win_percentage
 		FROM standings st
 		JOIN teams t ON t.id = st.team_id
 		WHERE st.season_id = $1
-		ORDER BY st.position`, id)
+		ORDER BY st.group_order, st.position, st.id`, id)
 	if err != nil {
 		return nil, domain.SourceMeta{}, unavailable(err)
 	}
@@ -140,7 +140,7 @@ func (s *Store) ListStandings(ctx context.Context, code string, year int) ([]dom
 	for rows.Next() {
 		var row domain.Standing
 		if err := rows.Scan(
-			&row.Position, &row.Team.ID, &row.Team.Name, &row.Team.ShortName, &row.Team.State,
+			&row.GroupName, &row.GroupOrder, &row.Position, &row.Team.ID, &row.Team.Name, &row.Team.ShortName, &row.Team.State,
 			&row.Played, &row.Wins, &row.Draws, &row.Losses, &row.GoalsFor, &row.GoalsAgainst,
 			&row.GoalDifference, &row.Points, &row.YellowCards, &row.RedCards, &row.WinPercentage,
 		); err != nil {

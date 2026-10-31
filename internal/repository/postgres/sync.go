@@ -237,13 +237,15 @@ func publish(ctx context.Context, tx pgx.Tx, snap domain.Snapshot, runID int64) 
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO standings (
-				season_id, team_id, position, played, wins, draws, losses, goals_for, goals_against,
-				goal_difference, points, yellow_cards, red_cards, win_percentage, source, collected_at
+				season_id, team_id, position, group_name, group_order, played, wins, draws, losses,
+				goals_for, goals_against, goal_difference, points, yellow_cards, red_cards,
+				win_percentage, source, collected_at
 			) VALUES (
-				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
+				$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
 			)`,
-			seasonID, teamID, row.Position, row.Played, row.Wins, row.Draws, row.Losses, row.GoalsFor, row.GoalsAgainst,
-			row.GoalDifference, row.Points, row.YellowCards, row.RedCards, row.WinPercentage, snap.Source, snap.CollectedAt,
+			seasonID, teamID, row.Position, row.GroupName, row.GroupOrder, row.Played, row.Wins, row.Draws, row.Losses,
+			row.GoalsFor, row.GoalsAgainst, row.GoalDifference, row.Points, row.YellowCards, row.RedCards,
+			row.WinPercentage, snap.Source, snap.CollectedAt,
 		); err != nil {
 			return unavailable(err)
 		}
