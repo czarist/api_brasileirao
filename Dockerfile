@@ -1,4 +1,4 @@
-FROM golang:1.24.3-bookworm AS build
+FROM golang:1.26.10-bookworm AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -7,7 +7,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api \
     && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/worker ./cmd/worker \
     && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/migrate ./cmd/migrate
 
-FROM golang:1.24.3-bookworm AS test
+FROM golang:1.26.10-bookworm AS test
 WORKDIR /src
 
 FROM alpine:3.21.3 AS runtime

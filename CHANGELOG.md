@@ -14,9 +14,13 @@ The format is based on Keep a Changelog. This project does not publish version t
 - Read API under `/api/v1`, health checks, OpenAPI 3.1, and Swagger UI.
 - Sync worker with a manual one-shot command, advisory locking, and retention of the last valid snapshot when a collection fails.
 
+### Changed
+
+- Updated Go dependencies and the build/test images to Go 1.26.10.
+
 ### Security
 
 - API and worker containers run as a non-root user.
 - Configuration comes from the environment. `.env.example` has local defaults only.
 - Public routes are read-only and rate limited. Source URLs are not taken from clients.
-- `govulncheck` on Go 1.24.3 reports findings in the standard library, `golang.org/x/net` v0.50.0, and `golang.org/x/text` v0.34.0. Those fixes require Go 1.25 or newer, which this module does not use.
+- `govulncheck ./...` reports no known vulnerabilities with Go 1.26 and the updated dependencies.

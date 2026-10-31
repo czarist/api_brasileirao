@@ -74,7 +74,7 @@ The 2026 Série A championship id in that catalog is `1260611`. Club ids come fr
 
 `go test ./...` does not call the CBF website. Parser tests use fixtures in `internal/scraper/cbf/testdata`. The PostgreSQL test creates a schema named `it_` plus random hex, migrates that schema, and drops only that schema. It runs when `DATABASE_URL` is set. `CBF_LIVE=1` is reserved and is not required.
 
-`go test -race` needs cgo. The Compose `test` profile runs it inside the Go image. `govulncheck` on Go 1.24.3 reports findings in the standard library, `golang.org/x/net` v0.50.0, and `golang.org/x/text` v0.34.0. The published fixes require Go 1.25 or newer, so that command exits non-zero and the CI step is `continue-on-error`.
+`go test -race` needs cgo. The Compose `test` profile runs it inside the Go 1.26.10 image. The module uses Go 1.26 because the current `golang.org/x/net` release requires it. `govulncheck ./...` reports no known vulnerabilities with this toolchain and dependency set.
 
 ## Layout
 
