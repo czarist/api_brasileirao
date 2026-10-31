@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "api-design-principles": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/backend-development/skills/api-design-principles/SKILL.md",
+      "computedHash": "a91429c25bb978f99f5da8d8752b8ae87ece51abcb24acb3953a5b1662c9bd5c"
+    },
+    "docker-expert": {
+      "source": "sickn33/agentic-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-expert/SKILL.md",
+      "computedHash": "7123a9d14116cfa92466dded4e58d31f724218fdc326994fd4e3378f6ffa5378"
+    },
+    "golang-pro": {
+      "source": "Jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/golang-pro/SKILL.md",
+      "computedHash": "1603e25c426b30e4cc450be82e7995299c8ca22950298216a7257244e9a0bac4"
+    },
+    "openapi-spec-generation": {
+      "source": "sickn33/agentic-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/openapi-spec-generation/SKILL.md",
+      "computedHash": "b276ed70b360f3be9d7118c50658fa5d8173ea16b5d7563d45b70d12cd46f994"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "128fac78002d916c8ca908245d398e634f540d8bcf20915b2b2359aeb18eba59"
+    },
+    "web-scraping": {
+      "source": "yfe404/web-scraper",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "8df93ce934454f86bf9f4939584c97eff48af898f0bcb27bcbff20a761097d2d"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+.git
+legacy
+agent
+.agents
+.claude
+grok.md
+skills-lock.json
+.env
+tmp
+bin
+coverage.out
+*.exe
+*.md
+!docs/**

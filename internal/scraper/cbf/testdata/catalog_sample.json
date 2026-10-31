@@ -1,0 +1,22 @@
+{
+  "campeonatos": [
+    {
+      "id": "42",
+      "nome": "Campeonato Brasileiro",
+      "categorias": [
+        {
+          "id": "1",
+          "nome": "Série A",
+          "anos": "2025, 2026",
+          "id_campeonato": "12606, 1260611"
+        },
+        {
+          "id": "2",
+          "nome": "Série B",
+          "anos": "2026",
+          "id_campeonato": "1260612"
+        }
+      ]
+    }
+  ]
+}
