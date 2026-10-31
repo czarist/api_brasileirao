@@ -46,7 +46,7 @@ type fakeSource struct {
 	hits int
 }
 
-func (f *fakeSource) Fetch(ctx context.Context, year int, collected time.Time) (domain.Snapshot, error) {
+func (f *fakeSource) Fetch(ctx context.Context, competition string, year int, collected time.Time) (domain.Snapshot, error) {
 	f.hits++
 	if f.err != nil {
 		return domain.Snapshot{}, f.err

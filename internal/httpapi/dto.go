@@ -35,6 +35,7 @@ type seasonDTO struct {
 
 type standingDTO struct {
 	Position       int     `json:"position"`
+	GroupName      string  `json:"group_name"`
 	Team           teamDTO `json:"team"`
 	Played         int     `json:"played"`
 	Wins           int     `json:"wins"`

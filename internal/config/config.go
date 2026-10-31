@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/czarist/api_brasileirao/internal/scraper/cbf"
 )
 
 // Config is the validated runtime configuration.
@@ -33,6 +35,7 @@ type Config struct {
 	SyncTimeout       time.Duration
 	SyncCompetition   string
 	SyncYear          int
+	SyncAllYears      bool
 	StaleAfter        time.Duration
 	MinMatches        int
 	MinStandings      int
@@ -143,6 +146,14 @@ func Load() (Config, error) {
 	if cfg.SyncYear, err = intEnv("SYNC_YEAR", 0); err != nil {
 		return Config{}, err
 	}
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("SYNC_YEARS"))) {
+	case "", "0":
+		cfg.SyncAllYears = false
+	case "all":
+		cfg.SyncAllYears = true
+	default:
+		return Config{}, fmt.Errorf("SYNC_YEARS must be all or empty")
+	}
 	if cfg.MinMatches, err = intEnv("SYNC_MIN_MATCHES", cfg.MinMatches); err != nil {
 		return Config{}, err
 	}
@@ -182,8 +193,8 @@ func (cfg Config) validate() error {
 	default:
 		return fmt.Errorf("LOG_LEVEL must be debug, info, warn, or error")
 	}
-	if cfg.SyncCompetition != "brasileirao-serie-a" {
-		return fmt.Errorf("SYNC_COMPETITION must be brasileirao-serie-a in this version")
+	if _, err := cbf.ParseCodes(cfg.SyncCompetition); err != nil {
+		return fmt.Errorf("SYNC_COMPETITION: %w", err)
 	}
 	if cfg.SyncYear != 0 && (cfg.SyncYear < 1990 || cfg.SyncYear > 2100) {
 		return fmt.Errorf("SYNC_YEAR is out of range")

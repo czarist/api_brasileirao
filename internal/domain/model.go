@@ -83,9 +83,11 @@ type MatchInput struct {
 }
 
 // StandingInput is one official table row. GoalDifference is the published
-// figure, which can include a punishment.
+// figure, which can include a punishment. GroupName is empty for a single table.
 type StandingInput struct {
 	ExternalTeamID string
+	GroupName      string
+	GroupOrder     int
 	Position       int
 	Played         int
 	Wins           int
@@ -154,14 +156,18 @@ func (s Snapshot) Validate(limits Limits) error {
 		seenMatch[match.ExternalID] = struct{}{}
 	}
 
-	positions := make(map[int]struct{}, len(s.Standings))
+	positions := make(map[string]struct{}, len(s.Standings))
 	standingTeams := make(map[string]struct{}, len(s.Standings))
 	for _, row := range s.Standings {
 		if row.Position <= 0 || row.ExternalTeamID == "" {
 			return fmt.Errorf("standing is missing a position or team: %w", ErrInvalid)
 		}
-		if _, ok := positions[row.Position]; ok {
-			return fmt.Errorf("duplicate standing position %d: %w", row.Position, ErrInvalid)
+		if row.GroupOrder < 0 {
+			return fmt.Errorf("standing group order is negative: %w", ErrInvalid)
+		}
+		key := row.GroupName + "\x00" + fmt.Sprint(row.Position)
+		if _, ok := positions[key]; ok {
+			return fmt.Errorf("duplicate standing position %d in group %q: %w", row.Position, row.GroupName, ErrInvalid)
 		}
 		if _, ok := standingTeams[row.ExternalTeamID]; ok {
 			return fmt.Errorf("duplicate standing team %s: %w", row.ExternalTeamID, ErrInvalid)
@@ -169,7 +175,7 @@ func (s Snapshot) Validate(limits Limits) error {
 		if _, ok := teams[row.ExternalTeamID]; !ok {
 			return fmt.Errorf("standing team %s is not in the team list: %w", row.ExternalTeamID, ErrInvalid)
 		}
-		positions[row.Position] = struct{}{}
+		positions[key] = struct{}{}
 		standingTeams[row.ExternalTeamID] = struct{}{}
 	}
 	return nil
@@ -241,6 +247,8 @@ type Round struct {
 
 // Standing is an official table row joined to a team.
 type Standing struct {
+	GroupName      string
+	GroupOrder     int
 	Position       int
 	Team           Team
 	Played         int

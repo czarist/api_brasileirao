@@ -31,6 +31,15 @@ func TestSnapshotValidate(t *testing.T) {
 	if err := snap.Validate(Limits{MinMatches: 5, MinStandings: 1, MaxStandings: 2}); !errors.Is(err, ErrIncomplete) {
 		t.Fatalf("short match list: %v", err)
 	}
+	snap = sampleSnapshot()
+	snap.Standings = append(snap.Standings, StandingInput{ExternalTeamID: "2", GroupName: "GRUPO B", GroupOrder: 1, Position: 1})
+	if err := snap.Validate(Limits{MinMatches: 1, MinStandings: 1, MaxStandings: 2}); err != nil {
+		t.Fatalf("position repeated in another group: %v", err)
+	}
+	snap.Standings[1].GroupName = ""
+	if err := snap.Validate(Limits{MinMatches: 1, MinStandings: 1, MaxStandings: 2}); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("duplicate position in one table: %v", err)
+	}
 }
 
 func sampleSnapshot() Snapshot {

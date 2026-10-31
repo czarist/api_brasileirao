@@ -173,7 +173,7 @@ func (h *Handler) standings(w http.ResponseWriter, r *http.Request) {
 	data := make([]standingDTO, 0, len(items))
 	for _, item := range items {
 		data = append(data, standingDTO{
-			Position: item.Position, Team: newTeamDTO(item.Team), Played: item.Played, Wins: item.Wins,
+			Position: item.Position, GroupName: item.GroupName, Team: newTeamDTO(item.Team), Played: item.Played, Wins: item.Wins,
 			Draws: item.Draws, Losses: item.Losses, GoalsFor: item.GoalsFor, GoalsAgainst: item.GoalsAgainst,
 			GoalDifference: item.GoalDifference, Points: item.Points, YellowCards: item.YellowCards,
 			RedCards: item.RedCards, WinPercentage: item.WinPercentage,

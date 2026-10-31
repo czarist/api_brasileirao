@@ -43,7 +43,7 @@ func TestParseStandingsRejectsEmptyAndBlockedPages(t *testing.T) {
 
 func TestAssembleFixtureStatuses(t *testing.T) {
 	collected := time.Date(2026, 10, 30, 15, 0, 0, 0, time.UTC)
-	snap, err := Assemble(2026, "1260611", collected,
+	snap, err := Assemble(SerieA, 2026, "1260611", collected,
 		readFixture(t, "testdata/matches_sample.json"),
 		[]byte("[]"),
 		readFixture(t, "testdata/standings_sample.html"))
@@ -98,7 +98,7 @@ func TestScheduleChangeKeepsRoundAndCanPostpone(t *testing.T) {
 	standings := []byte(`<table><tr><td><strong>1</strong><a href="/times/x/20086"><strong>Chapecoense</strong></a></td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td></tr></table>`)
 	// Standings need both clubs that appear... Assemble does not require every match club in the table.
 	// The postponed row's team must parse. One standings row is enough for this unit.
-	snap, err := Assemble(2026, "99", time.Unix(0, 0).UTC(), matches, imt, standings)
+	snap, err := Assemble(SerieA, 2026, "99", time.Unix(0, 0).UTC(), matches, imt, standings)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,18 +130,43 @@ func TestFinishedScoreBeatsACancellationNote(t *testing.T) {
 
 func TestSeasonExternalID(t *testing.T) {
 	body := readFixture(t, "testdata/catalog_sample.json")
-	id, err := SeasonExternalID(body, 2026)
+	id, err := SeasonExternalID(body, "1", 2026)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if id != "1260611" {
 		t.Fatalf("id = %s", id)
 	}
-	if _, err := SeasonExternalID(body, 2010); err == nil {
+	if _, err := SeasonExternalID(body, "1", 2010); err == nil {
 		t.Fatal("missing year was accepted")
 	}
-	if _, err := SeasonExternalID([]byte(`{"campeonatos":{}}`), 2026); err == nil {
+	if _, err := SeasonExternalID([]byte(`{"campeonatos":{}}`), "1", 2026); err == nil {
 		t.Fatal("object catalog was accepted")
+	}
+}
+
+func TestParseStandingsReadsEscapedGroups(t *testing.T) {
+	body := []byte(`<html><script>{\"title\":\"GRUPO A\",\"data\":[{\"cod_time\":\"1\",\"time\":\"One\",\"posicao\":\"1\",\"pontos\":\"10\",\"jogos\":\"4\",\"vitorias\":\"3\",\"empates\":\"1\",\"derrotas\":\"0\",\"gols_pro\":\"5\",\"gols_contra\":\"1\",\"gols_saldo\":\"4\",\"cartoes_amarelo\":\"2\",\"cartoes_vermelho\":\"0\",\"aproveitamento\":\"83\"}]},{\"title\":\"GRUPO B\",\"data\":[{\"cod_time\":\"2\",\"time\":\"Two\",\"posicao\":\"1\",\"pontos\":\"9\",\"jogos\":\"4\",\"vitorias\":\"3\",\"empates\":\"0\",\"derrotas\":\"1\",\"gols_pro\":\"4\",\"gols_contra\":\"2\",\"gols_saldo\":\"2\",\"cartoes_amarelo\":\"1\",\"cartoes_vermelho\":\"0\",\"aproveitamento\":\"75\"}]}</script></html>`)
+	rows, names, err := ParseStandings(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 2 || names["1"] != "One" || names["2"] != "Two" {
+		t.Fatalf("rows=%d names=%v", len(rows), names)
+	}
+	if rows[0].GroupName != "GRUPO A" || rows[0].GroupOrder != 0 || rows[0].Position != 1 || rows[0].Points != 10 {
+		t.Fatalf("first = %+v", rows[0])
+	}
+	if rows[1].GroupName != "GRUPO B" || rows[1].GroupOrder != 1 || rows[1].Position != 1 {
+		t.Fatalf("second = %+v", rows[1])
+	}
+}
+
+func TestFirstPointsPhaseSkipsTheKnockout(t *testing.T) {
+	body := []byte(`{\"fase_id\":\"2117\",\"fase_nome\":\"Final\",\"fase_tipo\":\"eliminacao\"},\"phasesList\":[{\"fase_id\":\"2013\",\"fase_nome\":\"1ª Fase\",\"fase_tipo\":\"pontuacao\"},{\"fase_id\":\"2098\",\"fase_tipo\":\"pontuacao\"}]`)
+	id, ok := firstPointsPhase(body)
+	if !ok || id != "2013" {
+		t.Fatalf("phase = %q ok=%v", id, ok)
 	}
 }
 

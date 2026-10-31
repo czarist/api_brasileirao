@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -19,9 +20,9 @@ import (
 )
 
 func main() {
-	once := flag.Bool("once", false, "collect one season and exit")
-	competitionFlag := flag.String("competition", "", "competition code (default: SYNC_COMPETITION)")
-	yearFlag := flag.Int("year", 0, "season year (default: SYNC_YEAR, or the current year in America/Sao_Paulo)")
+	once := flag.Bool("once", false, "collect the selected seasons and exit")
+	competitionFlag := flag.String("competition", "", "competition code, a comma-separated list, or all (default: SYNC_COMPETITION)")
+	yearFlag := flag.Int("year", 0, "one season year; overrides SYNC_YEARS=all")
 	flag.Parse()
 
 	config.LoadDotEnv(".env")
@@ -31,23 +32,27 @@ func main() {
 		os.Exit(1)
 	}
 	log := config.NewLogger(cfg.LogLevel)
-	competition := cfg.SyncCompetition
+	spec := cfg.SyncCompetition
 	if *competitionFlag != "" {
-		competition = *competitionFlag
+		spec = *competitionFlag
 	}
-	if competition != cbf.CompetitionCode {
-		log.Error("unsupported competition", "competition", competition)
+	codes, err := cbf.ParseCodes(spec)
+	if err != nil {
+		log.Error("competition", "error", err.Error())
 		os.Exit(1)
 	}
-	year := cfg.SyncYear
-	if *yearFlag != 0 {
-		year = *yearFlag
-	}
-	if year == 0 {
-		year, err = cbf.CurrentYear(time.Now())
-		if err != nil {
-			log.Error("season year", "error", err.Error())
-			os.Exit(1)
+	allYears := cfg.SyncAllYears && *yearFlag == 0
+	year := *yearFlag
+	if !allYears {
+		if year == 0 {
+			year = cfg.SyncYear
+		}
+		if year == 0 {
+			year, err = cbf.CurrentYear(time.Now())
+			if err != nil {
+				log.Error("season year", "error", err.Error())
+				os.Exit(1)
+			}
 		}
 	}
 
@@ -70,19 +75,64 @@ func main() {
 		log.Error("source client", "error", err.Error())
 		os.Exit(1)
 	}
-	syncer := service.New(storeGate{Store: postgres.New(pool, cfg.StaleAfter)}, cbf.NewSource(client), domain.Limits{
+	source := cbf.NewSource(client)
+	syncer := service.New(storeGate{Store: postgres.New(pool, cfg.StaleAfter)}, source, domain.Limits{
 		MinMatches:   cfg.MinMatches,
 		MinStandings: cfg.MinStandings,
 		MaxStandings: cfg.MaxStandings,
 	}, log)
+	syncer.SetLimitsFor(func(code string) (domain.Limits, bool) {
+		comp, ok := cbf.Lookup(code)
+		if !ok {
+			return domain.Limits{}, false
+		}
+		return comp.Limits(), true
+	})
 
 	run := func() error {
-		runCtx, cancel := context.WithTimeout(ctx, cfg.SyncTimeout)
-		defer cancel()
-		return syncer.Sync(runCtx, competition, year)
+		source.Reset()
+		planCtx, cancel := context.WithTimeout(ctx, cfg.SyncTimeout)
+		plans, err := source.Plan(planCtx, codes)
+		cancel()
+		if err != nil {
+			return err
+		}
+		if !allYears {
+			filtered := make([]cbf.SeasonPlan, 0, len(codes))
+			for _, plan := range plans {
+				if plan.Year == year {
+					filtered = append(filtered, plan)
+				}
+			}
+			plans = filtered
+		}
+		if len(plans) == 0 {
+			return fmt.Errorf("catalog has no seasons for the requested competitions")
+		}
+		log.Info("sync plan", "seasons", len(plans))
+		var failed int
+		for _, plan := range plans {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			runCtx, runCancel := context.WithTimeout(ctx, cfg.SyncTimeout)
+			err := syncer.Sync(runCtx, plan.Competition.Code, plan.Year)
+			runCancel()
+			if err != nil {
+				if ctx.Err() != nil {
+					return err
+				}
+				failed++
+			}
+		}
+		if failed > 0 {
+			return fmt.Errorf("%d season syncs failed", failed)
+		}
+		return nil
 	}
 	if *once {
 		if err := run(); err != nil {
+			log.Error("sync finished with failures", "error", err.Error())
 			os.Exit(1)
 		}
 		return

@@ -13,18 +13,16 @@ import (
 )
 
 const (
-	// CompetitionCode is the only competition this adapter publishes.
+	// CompetitionCode is Série A. The adapter also publishes Série B, C, and D.
 	CompetitionCode   = "brasileirao-serie-a"
-	competitionName   = "Campeonato Brasileiro Série A"
 	catalogCampeonato = "42"
-	catalogCategoria  = "1"
 )
 
 var digitsOnly = regexp.MustCompile(`^[0-9]+$`)
 
 // Assemble turns the three collected documents into one snapshot.
 // Standings names win over fixture names. A differing fixture name is kept as an alias.
-func Assemble(year int, externalID string, collected time.Time, matchesJSON, imtJSON, standingsHTML []byte) (domain.Snapshot, error) {
+func Assemble(comp Competition, year int, externalID string, collected time.Time, matchesJSON, imtJSON, standingsHTML []byte) (domain.Snapshot, error) {
 	if !digitsOnly.MatchString(externalID) {
 		return domain.Snapshot{}, fmt.Errorf("season external id %q is not numeric", externalID)
 	}
@@ -68,10 +66,10 @@ func Assemble(year int, externalID string, collected time.Time, matchesJSON, imt
 	sort.Slice(merged, func(i, j int) bool { return merged[i].ExternalID < merged[j].ExternalID })
 	return domain.Snapshot{
 		Source:           domain.SourceCBF,
-		CompetitionCode:  CompetitionCode,
-		CompetitionName:  competitionName,
+		CompetitionCode:  comp.Code,
+		CompetitionName:  comp.Name,
 		SeasonYear:       year,
-		SeasonName:       fmt.Sprintf("%s %d", competitionName, year),
+		SeasonName:       fmt.Sprintf("%s %d", comp.Name, year),
 		SeasonExternalID: externalID,
 		Teams:            merged,
 		Matches:          matches,
@@ -107,37 +105,69 @@ type catalogDoc struct {
 	} `json:"campeonatos"`
 }
 
-// SeasonExternalID finds the Série A championship id for a year.
-func SeasonExternalID(body []byte, year int) (string, error) {
+// SeasonRef is one year published for a catalog category.
+type SeasonRef struct {
+	Year       int
+	ExternalID string
+}
+
+// CatalogSeasons lists the years and championship ids of one category.
+// A missing category returns no seasons. The two lists must be the same length.
+func CatalogSeasons(body []byte, categoryID string) ([]SeasonRef, error) {
 	var doc catalogDoc
 	if err := json.Unmarshal(body, &doc); err != nil {
-		return "", fmt.Errorf("parse catalog: %w", err)
+		return nil, fmt.Errorf("parse catalog: %w", err)
 	}
-	want := strconv.Itoa(year)
 	for _, championship := range doc.Campeonatos {
 		if championship.ID != catalogCampeonato {
 			continue
 		}
 		for _, category := range championship.Categorias {
-			if category.ID != catalogCategoria || category.Years == nil || category.Championships == nil {
+			if category.ID != categoryID {
 				continue
+			}
+			if category.Years == nil || category.Championships == nil {
+				return nil, nil
 			}
 			years := splitList(*category.Years)
 			ids := splitList(*category.Championships)
 			if len(years) != len(ids) {
-				return "", fmt.Errorf("catalog year list and id list differ in length")
+				return nil, fmt.Errorf("catalog year list and id list differ in length")
 			}
+			out := make([]SeasonRef, 0, len(years))
+			seen := make(map[int]struct{}, len(years))
 			for i, item := range years {
-				if item == want {
-					if !digitsOnly.MatchString(ids[i]) {
-						return "", fmt.Errorf("catalog id %q is not numeric", ids[i])
-					}
-					return ids[i], nil
+				year, err := strconv.Atoi(item)
+				if err != nil {
+					return nil, fmt.Errorf("catalog year %q is not numeric", item)
 				}
+				if !digitsOnly.MatchString(ids[i]) {
+					return nil, fmt.Errorf("catalog id %q is not numeric", ids[i])
+				}
+				if _, ok := seen[year]; ok {
+					return nil, fmt.Errorf("catalog repeats year %d", year)
+				}
+				seen[year] = struct{}{}
+				out = append(out, SeasonRef{Year: year, ExternalID: ids[i]})
 			}
+			return out, nil
 		}
 	}
-	return "", fmt.Errorf("catalog has no Série A season for %d", year)
+	return nil, nil
+}
+
+// SeasonExternalID finds the championship id for a category and year.
+func SeasonExternalID(body []byte, categoryID string, year int) (string, error) {
+	seasons, err := CatalogSeasons(body, categoryID)
+	if err != nil {
+		return "", err
+	}
+	for _, season := range seasons {
+		if season.Year == year {
+			return season.ExternalID, nil
+		}
+	}
+	return "", fmt.Errorf("catalog has no category %s season for %d", categoryID, year)
 }
 
 func splitList(value string) []string {

@@ -21,11 +21,26 @@ func TestLoadRequiresPostgresURL(t *testing.T) {
 		t.Fatal("unknown competition was accepted")
 	}
 	t.Setenv("SYNC_COMPETITION", "brasileirao-serie-a")
+	t.Setenv("SYNC_YEARS", "2026")
+	if _, err := Load(); err == nil {
+		t.Fatal("SYNC_YEARS was accepted")
+	}
+	t.Setenv("SYNC_YEARS", "all")
+	t.Setenv("SYNC_COMPETITION", "brasileirao-serie-b,brasileirao-serie-c")
 	cfg, err := Load()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.SyncInterval.String() != "1h0m0s" || cfg.SourceBaseURL != "https://www.cbf.com.br" {
+	if !cfg.SyncAllYears || cfg.SyncCompetition != "brasileirao-serie-b,brasileirao-serie-c" {
+		t.Fatalf("competition config = %+v", cfg)
+	}
+	t.Setenv("SYNC_YEARS", "")
+	t.Setenv("SYNC_COMPETITION", "brasileirao-serie-a")
+	cfg, err = Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.SyncInterval.String() != "1h0m0s" || cfg.SourceBaseURL != "https://www.cbf.com.br" || cfg.SyncAllYears {
 		t.Fatalf("defaults = %+v", cfg)
 	}
 }

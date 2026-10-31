@@ -2,19 +2,20 @@ openapi: 3.1.0
 info:
   title: API Brasileirão
   version: 0.1.0
-  summary: Read-only Campeonato Brasileiro Série A API.
+  summary: Read-only Campeonato Brasileiro API for Série A, Série B, Série C, and Série D.
   description: |
     Public read API for data collected from the CBF public site and stored in PostgreSQL.
     This project is not affiliated with the CBF, any club, or any broadcaster.
 
     The API does not scrape on request and does not promise live scores. The worker collects
-    a season on its interval (one hour by default). A payload with `stale: true` is the last
-    successful collection, either because that collection is older than the configured window
-    or because a later collection failed. `collection_status: never_collected` means no
-    successful collection has been stored. Unknown scores and unknown kickoffs are null.
-    The standings figures are the official table, including a goal difference that may not
-    equal goals for minus goals against. `in_progress` is reserved and is not emitted by the
-    current collector.
+    the configured competitions and seasons on its interval (one hour by default). A payload
+    with `stale: true` is the last successful collection, either because that collection is
+    older than the configured window or because a later collection failed.
+    `collection_status: never_collected` means no successful collection has been stored.
+    Unknown scores and unknown kickoffs are null. The standings figures are the official
+    table, including a goal difference that may not equal goals for minus goals against.
+    Grouped divisions repeat the position inside each group. `in_progress` is reserved and
+    is not emitted by the current collector.
 servers:
   - url: /
     description: The API that served this document
@@ -215,7 +216,7 @@ paths:
         - $ref: "#/components/parameters/Year"
       responses:
         "200":
-          description: Official table in position order. Points are not recalculated.
+          description: Official table ordered by group, then position. Points are not recalculated. Grouped divisions repeat position.
           content:
             application/json:
               schema:
@@ -449,9 +450,12 @@ components:
           type: [string, "null"]
     Standing:
       type: object
-      required: [position, team, played, wins, draws, losses, goals_for, goals_against, goal_difference, points, yellow_cards, red_cards, win_percentage]
+      required: [position, group_name, team, played, wins, draws, losses, goals_for, goals_against, goal_difference, points, yellow_cards, red_cards, win_percentage]
       properties:
         position: {type: integer}
+        group_name:
+          type: string
+          description: Official group name. Empty when the published table has no group title. A single table is often named GRUPO ÚNICO.
         team: {$ref: "#/components/schemas/Team"}
         played: {type: integer}
         wins: {type: integer}
