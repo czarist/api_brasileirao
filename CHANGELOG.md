@@ -17,6 +17,7 @@ The format is based on Keep a Changelog. This project does not publish version t
 ### Changed
 
 - Updated Go dependencies and the build/test images to Go 1.26.10.
+- Excluded HTML files from GitHub language statistics without removing them from the repository.
 
 ### Security
 

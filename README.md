@@ -78,4 +78,4 @@ The 2026 Série A championship id in that catalog is `1260611`. Club ids come fr
 
 ## Layout
 
-`cmd/api`, `cmd/worker`, and `cmd/migrate` are one Go module and one image, with different commands. HTTP handlers are in `internal/httpapi` and only read `internal/repository/postgres`. Collection lives in `internal/scraper/cbf`. `docs/openapi.yaml` is the contract served at `/openapi.yaml`.
+`cmd/api`, `cmd/worker`, and `cmd/migrate` are one Go module and one image, with different commands. HTTP handlers are in `internal/httpapi` and only read `internal/repository/postgres`. Collection lives in `internal/scraper/cbf`. `docs/openapi.yaml` is the contract served at `/openapi.yaml`. HTML files are excluded from GitHub's language statistics via `.gitattributes`; they remain tracked when needed by the project.
