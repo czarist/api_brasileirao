@@ -15,8 +15,9 @@ Módulo II, Segunda Divisão); FFDF Candangão Série A and B; FGF Goiás (fgf.e
 1ª Divisão, Divisão de Acesso, and 3ª Divisão; FPF Pernambuco A1, A2, and A3;
 FMF Maranhão Série A and B; FMF Mato Grosso 1ª Divisão and II Divisão; FAF
 Alagoas Série A and, only for years the catalog names it, Série B; FBF Bahia
-Baianão Série A and Série B. Federations without a working public catalog are
-not collected.
+Baianão Série A and Série B; FCF Santa Catarina Série A, Série B, and Série C
+for the years on https://fcf.com.br/competicoes/profissionais/. Federations
+without a working public catalog are not collected.
 Data is collected from those public sites and stored in PostgreSQL. HTTP
 handlers only read the database.
 
@@ -27,6 +28,7 @@ FFDF, FGF, FPF-PE     ->  portal adapter ->
 FMF-MA, FMF-MT        ->  uikit adapter  ->
 FAF public HTTP       ->  fafal adapter  ->
 FBF public HTTP       ->  fbf adapter    ->
+FCF public HTTP       ->  fcf adapter    ->
 ```
 
 Layout:
@@ -41,7 +43,8 @@ Layout:
 - `internal/scraper/uikit` collects Maranhão (`www.futebolmaranhense.com.br`) and Mato Grosso (`www.fmfmt.com.br`). Each client is locked to its host.
 - `internal/scraper/fafal` collects Alagoas from `https://www.futeboldealagoas.net` only.
 - `internal/scraper/fbf` collects the adult Baianão from `https://www.fbf.org.br` only. Division paths are `/competicoes/1` and `/competicoes/2`. It does not use `SOURCE_BASE_URL`.
-- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, and FBF. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
+- `internal/scraper/fcf` collects adult Catarinense Série A, B, and C from `https://fcf.com.br` only. Paths are `/competicoes/profissionais/`, `/{year}/`, and `/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. Cups, Recopa, women's, and youth options are skipped.
+- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, FBF, and FCF. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
 - `internal/service` orchestrates sync and read use cases.
 - `internal/repository/postgres` is the only SQL.
 - `internal/httpapi` is the HTTP boundary.

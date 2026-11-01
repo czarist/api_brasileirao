@@ -40,6 +40,7 @@ const (
 	SourceFMFMT = "fmf-mt"
 	SourceFAFAL = "faf-al"
 	SourceFBF   = "fbf"
+	SourceFCF   = "fcf"
 )
 
 // Collection states returned with API payloads.

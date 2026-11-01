@@ -51,6 +51,7 @@ Este projeto não tem vínculo com a CBF, a FMF, nenhum clube nem nenhuma emisso
 - **Mato-Grossense.** 1ª Divisão e II Divisão. Códigos `mato-grossense-primeira-divisao`, `mato-grossense-segunda-divisao`. Fonte `fmf-mt`. O catálogo não tem 3ª Divisão.
 - **Campeonato Alagoano.** Série A, e Série B quando o catálogo nomeia uma Série B adulta. Códigos `alagoano-serie-a`, `alagoano-serie-b`. Fonte `faf-al`. O catálogo não tem Série C.
 - **Baianão.** Série A e Série B. Códigos `baiano-serie-a`, `baiano-serie-b`. Fonte `fbf`. O catálogo não tem Série C adulta.
+- **Campeonato Catarinense.** Série A, Série B e Série C. Códigos `catarinense-serie-a`, `catarinense-serie-b`, `catarinense-serie-c`. Fonte `fcf`.
 
 `all` é essa lista, nessa ordem: o catálogo da CBF, depois o Mineiro, depois as divisões estaduais em `internal/catalog`. Base, feminino, amador e copas no site de uma federação ficam de fora. Divisão que o catálogo não nomeia não é inventada.
 
@@ -61,10 +62,11 @@ O scraper antigo em PHP e o front estático ficam em `legacy/`, só como referê
 - **Placar ausente, horário ausente.** Placar e horário que a fonte não publicou vêm `null`. Um 0-0 de verdade continua 0-0.
 - **Horários.** O início do jogo é gravado em UTC e devolvido em RFC 3339.
 - **Tabela oficial.** Pontos, saldo de gols e os outros números são copiados, inclusive um saldo que não fecha com os gols. `group_name` é o nome oficial do grupo. Fica vazio quando a página não tem título de grupo. Uma tabela única costuma sair como `GRUPO ÚNICO`. Divisão com grupos repete `position` dentro de cada grupo. As linhas seguem a ordem publicada dos grupos e, dentro do grupo, a posição. A Copa do Brasil não tem tabela, então essa lista vem vazia. Uma fase posterior do Mineiro que só repete clubes já gravados na classificação é ignorada.
-- **Cartões.** As tabelas da FMF e da FBF não publicam cartões, então `yellow_cards` e `red_cards` são 0 nessas temporadas. Um `*` no fim do número é nota de rodapé. O inteiro da célula é o que fica gravado. Um 0 publicado continua 0.
-- **Fonte.** `source.name` é o adaptador que gravou as linhas: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al` ou `fbf`. A lista de competições usa o adaptador da linha mais nova.
+- **Cartões.** As tabelas da FMF, da FBF e da FCF não publicam cartões, então `yellow_cards` e `red_cards` são 0 nessas temporadas. Um `*` no fim do número é nota de rodapé. O inteiro da célula é o que fica gravado. Um 0 publicado continua 0.
+- **Fonte.** `source.name` é o adaptador que gravou as linhas: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al`, `fbf` ou `fcf`. A lista de competições usa o adaptador da linha mais nova.
 - **Pênaltis.** O placar de pênaltis é copiado quando a fonte publica, inclusive um 0 de um dos lados. Jogo sem disputa fica com pênaltis `null`. Um par `(0)` num cartão antigo do Baianão é placeholder e não é gravado.
 - **Aproveitamento no Baianão.** A página da FBF imprime um decimal. Ele é gravado como inteiro, arredondado pelo primeiro dígito decimal, metade para cima.
+- **Aproveitamento no Catarinense.** A página da FCF não publica esse número, então o inteiro gravado é 0.
 - **Adiado.** Jogo adiado mantém a rodada original.
 - **Frescor.** `source.collection_status` é `ok` depois de uma sincronização que deu certo e `never_collected` quando ainda não há nada gravado. `source.stale` é verdadeiro quando o último sucesso é mais velho que `STALE_AFTER` (6 horas por padrão) ou quando uma coleta posterior falhou. As linhas anteriores ficam. O status de jogo `in_progress` existe no schema. O coletor atual não produz esse status.
 - **Frequência.** O intervalo padrão do worker é 1 hora.
@@ -92,10 +94,11 @@ No mesmo dia, one-shots separados gravaram as divisões adultas abaixo.
 - **Mato-Grossense.** 1ª Divisão 2020–2026: 61/10, 60/10, 55/10, 55/10, 57/10, 48/9, 53/10. II Divisão 2021–2026: 13/4, 25/10, 26/10, 41/11, 26/10, 28/10. Sem II Divisão em 2020. Fonte `fmf-mt`.
 - **Alagoano.** Série A 2020 e 2022–2026: 34/8, 38/8, 36/8, 36/8, 36/8, 34/8. O catálogo de 2021 não tem Série A adulta. Série B 2022–2024: 27/7, 51/10, 51/10. Os cards de B em 2025 e 2026 são Sub-23. Fonte `faf-al`. `GET /api/v1/competitions/alagoano-serie-a/seasons/2026/standings` devolveu o Asa, grupo `GRUPO A`, 17 pontos. A Série A 2026 continuou `cbf`, liderada pelo Flamengo com 73 pontos.
 - **Baianão.** Série A 2011–2026: 114/12, 140/12, 76/11, 76/11, 56/12, 56/12, 61/11, depois 51/10 em 2018–2024, 50/10 em 2025 e 48/10 em 2026. O select de 2027 lista cinco jogos e não foi gravado. Série B 2011–2026: 46/10, 46/10, 46/10, 47/10, 38/9, 32/6, 32/6, 31/6, 32/6, 17/6, 19/6, 72/12, 51/10, 51/10, 50/10, 51/10. Fonte `fbf`. Clubes que compartilham `default.png` ficam com o nome publicado. `GET /api/v1/competitions/baiano-serie-a/seasons/2026/standings` devolveu o Bahia, grupo `Grupo 1`, 23 pontos, 9 jogos.
+- **Catarinense.** Série A 2023–2026: 80/12, 80/12, 74/12, 70/12. Série B 2023–2026: 50/9, 55/10, 46/9, 90/10. Série C 2023–2026: 21/6, 8/3, 8/3, 14/4. O índice de anos lista só 2023–2026. Copas, Recopa, feminino e base ficam de fora. Fonte `fcf`. `GET /api/v1/competitions/catarinense-serie-a/seasons/2026/standings` devolveu o Brusque SAF, grupo `GRUPO A`, 12 pontos, 6 jogos.
 
 ## O que ainda falta
 
-As outras federações estaduais não estão nesta coleta. A fase 13 do [ROADMAP.md](ROADMAP.md) acompanha cada uma: Acre, Amapá, Amazonas, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Paraná, Piauí, Rio de Janeiro, Rio Grande do Norte, Rio Grande do Sul, Rondônia, Roraima, Santa Catarina, São Paulo, Sergipe e Tocantins.
+As outras federações estaduais não estão nesta coleta. A fase 13 do [ROADMAP.md](ROADMAP.md) acompanha cada uma: Acre, Amapá, Amazonas, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Paraná, Piauí, Rio de Janeiro, Rio Grande do Norte, Rio Grande do Sul, Rondônia, Roraima, São Paulo, Sergipe e Tocantins.
 
 Acre e São Paulo responderam 403. A Paraíba fechou a conexão TLS. O Piauí falhou na validação do certificado. Roraima e Sergipe não resolveram o host. O coletor não contorna HTTP 403, verificação de certificado nem host que não resolveu. O `www.fgf.com.br` do Rio Grande do Sul é outro site, diferente do `fgf.esp.br` de Goiás.
 
@@ -174,7 +177,7 @@ Os ids de campeonato de 2026 são Série A `1260611`, Série B `1260612`, Série
 
 O catálogo é pedido uma vez por coleta. Cada temporada pede então os jogos e as alterações de data. Uma divisão também pede a página de classificação do ano. Quando essa página não tem tabela reconhecida, o coletor pede o mesmo caminho mais o id da primeira fase de pontos (`fase_tipo` `pontuacao`) e não usa uma fase eliminatória. A Copa do Brasil não tem página de classificação, então esse pedido é pulado. Os pedidos esperam pelo menos `SOURCE_MIN_INTERVAL` e repetem HTTP 429 e 5xx com `Retry-After` quando ele vem na resposta. Página de bloqueio, tabela vazia ou lista curta de jogos falha essa temporada e não substitui as linhas gravadas. Uma linha de jogo com o mesmo id de clube nos dois lados é omitida. Dois clubes com o mesmo nome e escudos diferentes ficam os dois.
 
-Série A e Série B aceitam um snapshot de pelo menos 100 jogos e 18–22 linhas de classificação. Série C aceita pelo menos 40 jogos e 8–40 linhas. Série D aceita pelo menos 20 jogos e 16–128 linhas. A Copa do Brasil aceita pelo menos 100 jogos e exatamente zero linhas de classificação. Módulo I e Módulo II aceitam pelo menos 30 jogos e 8–24 linhas. A Segunda Divisão aceita pelo menos 20 jogos e 8–48 linhas. As divisões do Distrito Federal, de Goiás e de Pernambuco aceitam pelo menos 8 jogos e 4–40 linhas. Maranhão, Mato Grosso, Alagoas e Bahia aceitam pelo menos 8 jogos e 4–48 linhas.
+Série A e Série B aceitam um snapshot de pelo menos 100 jogos e 18–22 linhas de classificação. Série C aceita pelo menos 40 jogos e 8–40 linhas. Série D aceita pelo menos 20 jogos e 16–128 linhas. A Copa do Brasil aceita pelo menos 100 jogos e exatamente zero linhas de classificação. Módulo I e Módulo II aceitam pelo menos 30 jogos e 8–24 linhas. A Segunda Divisão aceita pelo menos 20 jogos e 8–48 linhas. As divisões do Distrito Federal, de Goiás e de Pernambuco aceitam pelo menos 8 jogos e 4–40 linhas. Maranhão, Mato Grosso, Alagoas e Bahia aceitam pelo menos 8 jogos e 4–48 linhas. Santa Catarina aceita pelo menos 8 jogos e 2–48 linhas.
 
 As páginas do Mineiro são `https://www.fmf.com.br/Competicoes/ProxJogos.aspx?d=1` (Módulo I), `d=2` (Módulo II) e `d=3` (Segunda Divisão). A temporada é um POST de formulário com `request` igual à opção numérica da página. O coletor recusa qualquer outro host e qualquer outro caminho.
 
@@ -191,6 +194,7 @@ Cada adaptador estadual fica preso a um host. Os caminhos saem desse adaptador. 
 | `uikit` | `fmf-mt` | `www.fmfmt.com.br` | Mato-Grossense |
 | `fafal` | `faf-al` | `www.futeboldealagoas.net` | Alagoano |
 | `fbf` | `fbf` | `www.fbf.org.br` | Baianão |
+| `fcf` | `fcf` | `fcf.com.br` | Catarinense |
 
 A sincronização pega um advisory lock do Postgres por competição e temporada. Página vazia, tabela quebrada ou resposta que não é HTML é coleta que falhou.
 
@@ -203,7 +207,7 @@ cmd/
   migrate/             # aplica o SQL versionado. A API e o worker não migram.
 internal/
   domain/              # tipos e validação do snapshot
-  scraper/             # cbf, fmf, portal, uikit, fafal, fbf. Os seletores ficam aqui.
+  scraper/             # cbf, fmf, portal, uikit, fafal, fbf, fcf. Os seletores ficam aqui.
   catalog/             # códigos das competições. "all" é esta lista.
   service/             # casos de uso de sincronização e de leitura
   repository/postgres/ # o único SQL

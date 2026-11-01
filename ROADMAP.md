@@ -167,7 +167,7 @@ Depends on: phases 4 to 9.
 - [x] Módulo I, Módulo II, and Segunda Divisão. Youth, women's, and amateur competitions on the same site are not collected. No Série A, B, or C is invented.
 - [x] Every year the FMF select lists. On 2026-11-01 that was Módulo I 2013–2026 and the other two divisions 2014–2026.
 - [x] Matches for every published phase. The classification table is stored once per club. A later table that only repeats those clubs is skipped.
-- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, and Bahia are collected.
+- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, Bahia, and Santa Catarina are collected.
 
 Acceptance, checked on 2026-11-01 against the Compose database and the API:
 
@@ -204,7 +204,7 @@ Depends on: phases 4 to 9.
 - [ ] Rio Grande do Sul, `www.fgf.com.br`. This is not Goiás `fgf.esp.br`. The adult divisions are Gauchão, Gauchão Série A2, and Gauchão Série B. Copa FGF and Recopa stay out. The classification body on the fetched page was empty.
 - [ ] Rondônia, `www.ffer.com.br`. No match catalog was confirmed.
 - [ ] Roraima. No official host resolved.
-- [ ] Santa Catarina, `fcf.com.br`. Série A, Série B, and Série C are published.
+- [x] Santa Catarina, FCF, `fcf.com.br`, source `fcf`. Série A, Série B, and Série C, 2023–2026. Cups, Recopa, women's, and youth stay out. The year index lists no earlier season. The table does not publish cards or a win percentage, so those fields are 0. Série C 2024 and 2025 publish 3 clubs. A named phase with no round number is stored as round 1.
 - [ ] São Paulo, `www.futebolpaulista.com.br`. The host returned 403. Do not bypass it. The adult divisions are A1, A2, and A3.
 - [ ] Sergipe. No official host was confirmed.
 - [ ] Tocantins, `www.ftf.org.br`. No competition catalog was found.
@@ -216,5 +216,6 @@ Acceptance, checked on 2026-11-01 against the Compose database and the API:
 
 - Alagoano Série A 2026: 34 matches and 8 standings. `GET /api/v1/competitions/alagoano-serie-a/seasons/2026/standings` returned source `faf-al`, Asa, `GRUPO A`, 17 points, 7 played.
 - Baianão Série A 2026: 48 matches and 10 standings. `GET /api/v1/competitions/baiano-serie-a/seasons/2026/standings` returned source `fbf`, Bahia, `Grupo 1`, 23 points, 9 played. Série B 2013 has 46 matches and 10 standings.
+- Catarinense Série A 2023–2026: 80/12, 80/12, 74/12, 70/12. Série B 2023–2026: 50/9, 55/10, 46/9, 90/10. Série C 2023–2026: 21/6, 8/3, 8/3, 14/4. `GET /api/v1/competitions/catarinense-serie-a/seasons/2026/standings` returned source `fcf`, Brusque SAF, `GRUPO A`, 12 points, 6 played, yellow 0, red 0, win percentage 0. Chapecoense 1-1 Brusque SAF kicked off at `2026-01-06T22:00:00Z`.
 - Série A 2026 stayed source `cbf`, led by Flamengo with 73 points.
-- The hourly worker container `df275f704aeb` was still the previous image after the Bahia one-shots.
+- The hourly worker container `df275f704aeb` was still the previous image after the Bahia and Santa Catarina one-shots.

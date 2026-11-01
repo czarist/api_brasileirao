@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: API Brasileirão
   version: 0.1.0
-  summary: Read-only API for Campeonato Brasileiro Série A, Série B, Série C, and Série D, Copa do Brasil, and the professional Campeonato Mineiro.
+  summary: Read-only API for Campeonato Brasileiro Série A–D, the professional Copa do Brasil, and the adult state divisions that have an adapter.
   description: |
     Public read API for data collected from public federation sites and stored in PostgreSQL.
     This project is not affiliated with the CBF, the FMF, any club, or any broadcaster.
@@ -23,9 +23,11 @@ info:
     source publishes them, including a published 0. `in_progress` is reserved and
     is not emitted by the current collector. The FBF table does not publish cards,
     so `yellow_cards` and `red_cards` are 0 for Baianão seasons. Its win percentage
-    is a decimal rounded to an integer by the first decimal digit. `source.name`
+    is a decimal rounded to an integer by the first decimal digit. The FCF table
+    does not publish cards or a win percentage, so those fields are 0 for
+    Catarinense seasons. `source.name`
     is the adapter that stored the rows (`cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`,
-    `fmf-ma`, `fmf-mt`, `faf-al`, or `fbf`).
+    `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, or `fcf`).
     On a list of every competition it is the adapter of the newest stored row.
 servers:
   - url: /
@@ -425,7 +427,7 @@ components:
       type: object
       required: [name, collected_at, last_success_at, stale, collection_status]
       properties:
-        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf]}
+        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf, fcf]}
         collected_at:
           type: [string, "null"]
           format: date-time
