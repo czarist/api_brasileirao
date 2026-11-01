@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <b>A public read API for the Campeonato Brasileiro and the adult state divisions that have an adapter, written in Go.</b><br>
+  <b>A public read API for the Brazilian Soccer League, divisions A–D, and the adult state divisions that have an adapter, written in Go.</b><br>
   A worker collects those public federation pages into PostgreSQL. An HTTP call only reads that database.
 </p>
 
@@ -41,8 +41,8 @@ Read-only HTTP for the adult professional competitions below. The year in the pa
 
 This project is not affiliated with the CBF, the FMF, any club, or any broadcaster.
 
-- **Campeonato Brasileiro.** Série A, Série B, Série C, and Série D. Codes `brasileirao-serie-a`, `brasileirao-serie-b`, `brasileirao-serie-c`, `brasileirao-serie-d`. Source `cbf`.
-- **Copa do Brasil,** professional. Code `copa-do-brasil`. The cup has fixtures and an empty standings list.
+- **Brazilian Soccer League.** Divisions A, B, C, and D. Codes `brasileirao-serie-a`, `brasileirao-serie-b`, `brasileirao-serie-c`, `brasileirao-serie-d`. Source `cbf`.
+- **Brazil Cup,** professional. Code `copa-do-brasil`. The cup has fixtures and an empty standings list.
 - **Campeonato Mineiro.** Módulo I, Módulo II, and Segunda Divisão. Codes `mineiro-modulo-i`, `mineiro-modulo-ii`, `mineiro-segunda-divisao`. Source `fmf`.
 - **Candangão.** Série A and Série B. Codes `candangao-serie-a`, `candangao-serie-b`. Source `ffdf`. The catalog has no Série C.
 - **Campeonato Goiano.** 1ª Divisão, Divisão de Acesso, and 3ª Divisão. Codes `goiano-primeira-divisao`, `goiano-divisao-de-acesso`, `goiano-terceira-divisao`. Source `fgf-go`.
@@ -60,7 +60,7 @@ The previous PHP scraper and the static front end are kept under `legacy/` for r
 
 - **Missing score, missing kickoff.** Scores and kickoff times the source has not published are `null`. A real 0-0 stays 0-0.
 - **Times.** Kickoffs are stored in UTC and returned as RFC 3339.
-- **Official table.** Points, goal difference, and the other figures are copied, including a goal difference that does not match the raw goals. `group_name` is the official group title. It is empty when the page has no group title. A single table is often published as `GRUPO ÚNICO`. Grouped divisions repeat `position` inside each group. Rows follow the published group order, then position. Copa do Brasil has no table, so that list is empty. A later Mineiro phase table that only repeats clubs already in the classification is skipped.
+- **Official table.** Points, goal difference, and the other figures are copied, including a goal difference that does not match the raw goals. `group_name` is the official group title. It is empty when the page has no group title. A single table is often published as `GRUPO ÚNICO`. Grouped divisions repeat `position` inside each group. Rows follow the published group order, then position. Brazil Cup has no table, so that list is empty. A later Mineiro phase table that only repeats clubs already in the classification is skipped.
 - **Cards.** The FMF and FBF tables do not publish cards, so `yellow_cards` and `red_cards` are 0 for those seasons. A trailing `*` on a figure is a footnote. The integer in the cell is stored. A published 0 stays 0.
 - **Source.** `source.name` is the adapter that stored the rows: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al`, or `fbf`. A list of every competition uses the adapter of the newest stored row.
 - **Penalties.** Penalty scores are copied when the source publishes them, including a published 0 on one side. A match without a shoot-out has null penalty scores. A `(0)` pair on an old Bahia card is a placeholder and is not stored.
@@ -73,15 +73,15 @@ The previous PHP scraper and the static front end are kept under `legacy/` for r
 
 Counts are matches/standings. A year the catalog does not list is absent. A season that failed validation was not stored, and a failed season does not replace rows already stored for another year.
 
-Checked on 2026-10-31. A catalog sync stored 36 seasons, 2018–2026, for Série A, B, C, and D.
+Checked on 2026-10-31. A catalog sync stored 36 seasons, 2018–2026, for Brazilian Soccer League divisions A, B, C, and D.
 
-- **Série A and Série B.** 380 matches and 20 standings in each of those years. `group_name` is empty for Série A 2018 and for Série B 2018 and 2019. The other A and B seasons use `GRUPO ÚNICO`. Série A 2026 was led by Flamengo with 73 points from 33 matches.
-- **Série C.** 20 standings rows in every year: `GRUPO A` and `GRUPO B` in 2018–2021, and one group in 2022–2026. A later HTTP 429 for Série C 2024 left the stored rows in place.
-- **Série D.** 2020 names its eight groups `GRUPO A-01` through `GRUPO A-08`. 2026 has 16 groups, `GRUPO A1` through `GRUPO A16`, and 96 rows. 2018 and 2019 have 17 groups of 4. The first pass for 2021 saw an empty standings page. The next pass stored 518 matches and 64 standings. The first row was Castanhal, `GRUPO A01`, position 1, 36 points.
+- **Divisions A and B.** 380 matches and 20 standings in each of those years. `group_name` is empty for division A 2018 and for division B 2018 and 2019. The other A and B seasons use `GRUPO ÚNICO`. Division A 2026 was led by Flamengo with 73 points from 33 matches.
+- **Division C.** 20 standings rows in every year: `GRUPO A` and `GRUPO B` in 2018–2021, and one group in 2022–2026. A later HTTP 429 for division C 2024 left the stored rows in place.
+- **Division D.** 2020 names its eight groups `GRUPO A-01` through `GRUPO A-08`. 2026 has 16 groups, `GRUPO A1` through `GRUPO A16`, and 96 rows. 2018 and 2019 have 17 groups of 4. The first pass for 2021 saw an empty standings page. The next pass stored 518 matches and 64 standings. The first row was Castanhal, `GRUPO A01`, position 1, 36 points.
 
-The same day, a one-shot stored the professional Copa do Brasil for 2018–2026. Match counts are 120 in 2018 and 2020, 118 in 2019, 122 in 2021–2025, and 154 in 2026. Standings are empty in every year. The 2018 final is Cruzeiro Esporte Clube 1-0 Corinthians and Corinthians 1-2 Cruzeiro Esporte Clube. 2026 has four scheduled semi-finals with null scores and no final. 2019 omitted two rows, `813493` and `813503`, because both sides were Bragantino with club id `35938`. Série A was unchanged after that sync.
+The same day, a one-shot stored the professional Brazil Cup for 2018–2026. Match counts are 120 in 2018 and 2020, 118 in 2019, 122 in 2021–2025, and 154 in 2026. Standings are empty in every year. The 2018 final is Cruzeiro Esporte Clube 1-0 Corinthians and Corinthians 1-2 Cruzeiro Esporte Clube. 2026 has four scheduled semi-finals with null scores and no final. 2019 omitted two rows, `813493` and `813503`, because both sides were Bragantino with club id `35938`. Division A was unchanged after that sync.
 
-On 2026-11-01 a one-shot stored the three professional Mineiro divisions for every year on the FMF select: Módulo I 2013–2026, Módulo II 2014–2026, and Segunda Divisão 2014–2026. Módulo I 2026 has 53 matches and 12 standings in groups A, B, and C. Atlético SAF leads group A with 14 points. One Módulo I 2020 match has null scores. Módulo II 2026 stores Ipatinga at -2 points. Série A 2018–2026 stayed at 380 matches and 20 standings. Pages from 2013 and 2014 publish no `data-jogo` and no game number, so those matches use the page's map code as the external id and `match_number` is null.
+On 2026-11-01 a one-shot stored the three professional Mineiro divisions for every year on the FMF select: Módulo I 2013–2026, Módulo II 2014–2026, and Segunda Divisão 2014–2026. Módulo I 2026 has 53 matches and 12 standings in groups A, B, and C. Atlético SAF leads group A with 14 points. One Módulo I 2020 match has null scores. Módulo II 2026 stores Ipatinga at -2 points. Division A 2018–2026 stayed at 380 matches and 20 standings. Pages from 2013 and 2014 publish no `data-jogo` and no game number, so those matches use the page's map code as the external id and `match_number` is null.
 
 The same day, separate one-shots stored the adult state divisions below.
 
@@ -90,7 +90,7 @@ The same day, separate one-shots stored the adult state divisions below.
 - **Pernambucano.** A1 2020–2026: 57/10, 57/12, 57/10, 84/13, 53/10, 53/10, 38/8. A2 2018 and 2020–2025: 56/15, 59/13, 60/14, 105/25, 66/12, 52/10, 43/10. A3 2023: 21/7. A1 and A2 2019 had no matches. A3 2024 names no club for badge `35767`. Source `fpf-pe`.
 - **Maranhense.** Série A 2020–2025: 38/8, 38/8, 36/8, 36/8, 66/8, 62/8. Série B 2020–2023 and 2025: 30/4, 31/10, 26/7, 24/8, 35/11. Série A 2026 and Série B 2024 and 2026 published no classification. Source `fmf-ma`.
 - **Mato-Grossense.** 1ª Divisão 2020–2026: 61/10, 60/10, 55/10, 55/10, 57/10, 48/9, 53/10. II Divisão 2021–2026: 13/4, 25/10, 26/10, 41/11, 26/10, 28/10. No 2020 II Divisão. Source `fmf-mt`.
-- **Alagoano.** Série A 2020 and 2022–2026: 34/8, 38/8, 36/8, 36/8, 36/8, 34/8. The 2021 catalog has no adult Série A. Série B 2022–2024: 27/7, 51/10, 51/10. The 2025 and 2026 B cards are Sub-23. Source `faf-al`. `GET /api/v1/competitions/alagoano-serie-a/seasons/2026/standings` returned Asa, group `GRUPO A`, 17 points. Série A 2026 stayed `cbf`, led by Flamengo with 73 points.
+- **Alagoano.** Série A 2020 and 2022–2026: 34/8, 38/8, 36/8, 36/8, 36/8, 34/8. The 2021 catalog has no adult Série A. Série B 2022–2024: 27/7, 51/10, 51/10. The 2025 and 2026 B cards are Sub-23. Source `faf-al`. `GET /api/v1/competitions/alagoano-serie-a/seasons/2026/standings` returned Asa, group `GRUPO A`, 17 points. Division A 2026 stayed `cbf`, led by Flamengo with 73 points.
 - **Baianão.** Série A 2011–2026: 114/12, 140/12, 76/11, 76/11, 56/12, 56/12, 61/11, then 51/10 for 2018–2024, 50/10 in 2025, and 48/10 in 2026. The 2027 select lists five fixtures and was not stored. Série B 2011–2026: 46/10, 46/10, 46/10, 47/10, 38/9, 32/6, 32/6, 31/6, 32/6, 17/6, 19/6, 72/12, 51/10, 51/10, 50/10, 51/10. Source `fbf`. Clubs that share `default.png` keep the published name. `GET /api/v1/competitions/baiano-serie-a/seasons/2026/standings` returned Bahia, group `Grupo 1`, 23 points, 9 played.
 
 ## Still open
@@ -129,7 +129,7 @@ docker compose up -d --build
 docker compose run --rm --build worker -once -competition brasileirao-serie-a -year 2026
 ```
 
-`docker compose run --rm worker -once` uses the Compose environment and collects the full catalog. `-competition` accepts one code, a comma-separated list, or `all`. `-year` selects one year and overrides `SYNC_YEARS=all`. The process default, when those variables are unset, remains the current Série A season. `.env.example` documents that default.
+`docker compose run --rm worker -once` uses the Compose environment and collects the full catalog. `-competition` accepts one code, a comma-separated list, or `all`. `-year` selects one year and overrides `SYNC_YEARS=all`. The process default, when those variables are unset, remains the current division A season. `.env.example` documents that default.
 
 Codes: `brasileirao-serie-a`, `brasileirao-serie-b`, `brasileirao-serie-c`, `brasileirao-serie-d`, `copa-do-brasil`, `mineiro-modulo-i`, `mineiro-modulo-ii`, `mineiro-segunda-divisao`, `candangao-serie-a`, `candangao-serie-b`, `goiano-primeira-divisao`, `goiano-divisao-de-acesso`, `goiano-terceira-divisao`, `pernambucano-a1`, `pernambucano-a2`, `pernambucano-a3`, `maranhense-serie-a`, `maranhense-serie-b`, `mato-grossense-primeira-divisao`, `mato-grossense-segunda-divisao`, `alagoano-serie-a`, `alagoano-serie-b`, `baiano-serie-a`, `baiano-serie-b`.
 
@@ -165,16 +165,16 @@ Checked on 2026-10-30. `https://www.cbf.com.br/robots.txt` returned 404. The old
 
 | Document | Path | What it returns |
 | --- | --- | --- |
-| Catalog | `/api/cbf/campeonatos/anos` | JSON. Campeonato Brasileiro is id `42`. Category ids are `1` Série A, `2` Série B, `3` Série C, and `5` Série D. Copa do Brasil is championship `24`, professional category `4`. Category ids are not unique across championships. Years and championship ids are parallel comma-separated lists. |
+| Catalog | `/api/cbf/campeonatos/anos` | JSON. The Brazilian Soccer League is id `42`. Category ids are `1` division A, `2` division B, `3` division C, and `5` division D. Brazil Cup is championship `24`, professional category `4`. Category ids are not unique across championships. Years and championship ids are parallel comma-separated lists. |
 | Fixtures | `/api/cbf/jogos/tabela-detalhada/campeonato/{id}` | JSON, one phase, every match in the season. |
 | Schedule changes | `/api/cbf/campeonatos/{id}/imt` | JSON list. `01/01/1900` and `1900-01-01 ::00` mean the date is undefined. |
 | Standings | `/futebol-brasileiro/tabelas/campeonato-brasileiro/{slug}/{year}` | The official table, as an HTML table or as group rows embedded in the page. `{slug}` is `serie-a`, `serie-b`, `serie-c`, or `serie-d`. |
 
-The 2026 championship ids are Série A `1260611`, Série B `1260612`, Série C `1260613`, Série D `1260635`, and Copa do Brasil `1260615`. Club ids come from the badge URL `conteudo.cbf.com.br/clubes/{id}/escudo.jpg` on the HTML table, and from `cod_time` in an embedded group row. In the fixture feed the club id comes from the same badge URL.
+The 2026 championship ids are division A `1260611`, division B `1260612`, division C `1260613`, division D `1260635`, and Brazil Cup `1260615`. Club ids come from the badge URL `conteudo.cbf.com.br/clubes/{id}/escudo.jpg` on the HTML table, and from `cod_time` in an embedded group row. In the fixture feed the club id comes from the same badge URL.
 
-The catalog is requested once per collection. Each season then requests fixtures and schedule changes. A division also requests the standings year page. When that page has no parsed table, the collector requests the same path plus the id of the first points phase (`fase_tipo` `pontuacao`) and does not use a knockout phase. Copa do Brasil has no standings page, so that request is skipped. Requests wait at least `SOURCE_MIN_INTERVAL` and retry HTTP 429 and 5xx with `Retry-After` when it is present. A block page, an empty table, or a short fixture list fails that season and does not replace its stored rows. A fixture row that lists the same club id as home and away is omitted. Two clubs that share a name and have different badge ids both stay.
+The catalog is requested once per collection. Each season then requests fixtures and schedule changes. A division also requests the standings year page. When that page has no parsed table, the collector requests the same path plus the id of the first points phase (`fase_tipo` `pontuacao`) and does not use a knockout phase. Brazil Cup has no standings page, so that request is skipped. Requests wait at least `SOURCE_MIN_INTERVAL` and retry HTTP 429 and 5xx with `Retry-After` when it is present. A block page, an empty table, or a short fixture list fails that season and does not replace its stored rows. A fixture row that lists the same club id as home and away is omitted. Two clubs that share a name and have different badge ids both stay.
 
-Série A and Série B accept a snapshot of at least 100 matches and 18–22 standings rows. Série C accepts at least 40 matches and 8–40 rows. Série D accepts at least 20 matches and 16–128 rows. Copa do Brasil accepts at least 100 matches and exactly zero standings rows. Módulo I and Módulo II accept at least 30 matches and 8–24 rows. Segunda Divisão accepts at least 20 matches and 8–48 rows. The Distrito Federal, Goiás, and Pernambuco divisions accept at least 8 matches and 4–40 rows. Maranhão, Mato Grosso, Alagoas, and Bahia accept at least 8 matches and 4–48 rows.
+Divisions A and B accept a snapshot of at least 100 matches and 18–22 standings rows. Division C accepts at least 40 matches and 8–40 rows. Division D accepts at least 20 matches and 16–128 rows. Brazil Cup accepts at least 100 matches and exactly zero standings rows. Módulo I and Módulo II accept at least 30 matches and 8–24 rows. Segunda Divisão accepts at least 20 matches and 8–48 rows. The Distrito Federal, Goiás, and Pernambuco divisions accept at least 8 matches and 4–40 rows. Maranhão, Mato Grosso, Alagoas, and Bahia accept at least 8 matches and 4–48 rows.
 
 The Mineiro pages are `https://www.fmf.com.br/Competicoes/ProxJogos.aspx?d=1` (Módulo I), `d=2` (Módulo II), and `d=3` (Segunda Divisão). A season is a form POST of `request` set to the numeric option on that page. The collector refuses any other host and any other path.
 
@@ -182,7 +182,7 @@ Each state adapter is locked to one host. Paths come from that adapter. A client
 
 | Adapter | `source.name` | Host | Competitions |
 | --- | --- | --- | --- |
-| `cbf` | `cbf` | `www.cbf.com.br` | Série A–D, Copa do Brasil |
+| `cbf` | `cbf` | `www.cbf.com.br` | Brazilian Soccer League divisions A–D, Brazil Cup |
 | `fmf` | `fmf` | `www.fmf.com.br` | Mineiro |
 | `portal` | `ffdf` | `www.ffdf.com.br` | Candangão |
 | `portal` | `fgf-go` | `fgf.esp.br` | Goiano |
