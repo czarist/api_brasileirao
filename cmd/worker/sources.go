@@ -14,6 +14,7 @@ import (
 	"github.com/czarist/api_brasileirao/internal/scraper/fgfrs"
 	"github.com/czarist/api_brasileirao/internal/scraper/fmf"
 	"github.com/czarist/api_brasileirao/internal/scraper/fpfpr"
+	"github.com/czarist/api_brasileirao/internal/scraper/fsfse"
 	"github.com/czarist/api_brasileirao/internal/scraper/portal"
 	"github.com/czarist/api_brasileirao/internal/scraper/uikit"
 )
@@ -29,6 +30,7 @@ type seasonPlan struct {
 // None of them uses SOURCE_BASE_URL. FAF stays on www.futeboldealagoas.net.
 // FBF stays on www.fbf.org.br. FCF stays on fcf.com.br.
 // FPF-PR stays on federacaopr.com.br. FGF-RS stays on www.fgf.com.br.
+// FSF-SE stays on fsf-se.com.br.
 type router struct {
 	cbf    *cbf.Source
 	fmf    *fmf.Source
@@ -39,10 +41,11 @@ type router struct {
 	fcf    *fcf.Source
 	fpfpr  *fpfpr.Source
 	fgfrs  *fgfrs.Source
+	fsfse  *fsfse.Source
 }
 
-func newRouter(cbfClient *cbf.Client, fmfClient *fmf.Client, portalSource *portal.Source, uikitSource *uikit.Source, fafalSource *fafal.Source, fbfSource *fbf.Source, fcfSource *fcf.Source, fpfprSource *fpfpr.Source, fgfrsSource *fgfrs.Source) router {
-	return router{cbf: cbf.NewSource(cbfClient), fmf: fmf.NewSource(fmfClient), portal: portalSource, uikit: uikitSource, fafal: fafalSource, fbf: fbfSource, fcf: fcfSource, fpfpr: fpfprSource, fgfrs: fgfrsSource}
+func newRouter(cbfClient *cbf.Client, fmfClient *fmf.Client, portalSource *portal.Source, uikitSource *uikit.Source, fafalSource *fafal.Source, fbfSource *fbf.Source, fcfSource *fcf.Source, fpfprSource *fpfpr.Source, fgfrsSource *fgfrs.Source, fsfseSource *fsfse.Source) router {
+	return router{cbf: cbf.NewSource(cbfClient), fmf: fmf.NewSource(fmfClient), portal: portalSource, uikit: uikitSource, fafal: fafalSource, fbf: fbfSource, fcf: fcfSource, fpfpr: fpfprSource, fgfrs: fgfrsSource, fsfse: fsfseSource}
 }
 
 func (r router) Reset() {
@@ -55,10 +58,11 @@ func (r router) Reset() {
 	r.fcf.Reset()
 	r.fpfpr.Reset()
 	r.fgfrs.Reset()
+	r.fsfse.Reset()
 }
 
 func (r router) Plan(ctx context.Context, codes []string) ([]seasonPlan, error) {
-	cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes := splitCodes(codes)
+	cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes := splitCodes(codes)
 	plans := make([]seasonPlan, 0, len(codes))
 	if len(cbfCodes) > 0 {
 		got, err := r.cbf.Plan(ctx, cbfCodes)
@@ -141,6 +145,15 @@ func (r router) Plan(ctx context.Context, codes []string) ([]seasonPlan, error) 
 			plans = append(plans, seasonPlan{code: plan.Code, year: plan.Year})
 		}
 	}
+	if len(fsfseCodes) > 0 {
+		got, err := r.fsfse.Plan(ctx, fsfseCodes)
+		if err != nil {
+			return nil, err
+		}
+		for _, plan := range got {
+			plans = append(plans, seasonPlan{code: plan.Code, year: plan.Year})
+		}
+	}
 	sort.Slice(plans, func(i, j int) bool {
 		if plans[i].code != plans[j].code {
 			return plans[i].code < plans[j].code
@@ -175,10 +188,13 @@ func (r router) Fetch(ctx context.Context, competition string, year int, collect
 	if _, ok := fgfrs.Lookup(competition); ok {
 		return r.fgfrs.Fetch(ctx, competition, year, collected)
 	}
+	if _, ok := fsfse.Lookup(competition); ok {
+		return r.fsfse.Fetch(ctx, competition, year, collected)
+	}
 	return r.cbf.Fetch(ctx, competition, year, collected)
 }
 
-func splitCodes(codes []string) (cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes []string) {
+func splitCodes(codes []string) (cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes []string) {
 	for _, code := range codes {
 		if _, ok := fmf.Lookup(code); ok {
 			fmfCodes = append(fmfCodes, code)
@@ -212,9 +228,13 @@ func splitCodes(codes []string) (cbfCodes, fmfCodes, portalCodes, uikitCodes, fa
 			fgfrsCodes = append(fgfrsCodes, code)
 			continue
 		}
+		if _, ok := fsfse.Lookup(code); ok {
+			fsfseCodes = append(fsfseCodes, code)
+			continue
+		}
 		cbfCodes = append(cbfCodes, code)
 	}
-	return cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes
+	return cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes
 }
 
 func limitsFor(code string) (domain.Limits, bool) {
@@ -244,6 +264,9 @@ func limitsFor(code string) (domain.Limits, bool) {
 	}
 	if _, ok := fgfrs.Lookup(code); ok {
 		return fgfrs.Limits(), true
+	}
+	if _, ok := fsfse.Lookup(code); ok {
+		return fsfse.Limits(), true
 	}
 	return domain.Limits{}, false
 }
@@ -360,4 +383,17 @@ func newFGFRSSource(timeout, interval time.Duration, maxBody int64, retries int)
 		return nil, fmt.Errorf("fgfrs client: %w", err)
 	}
 	return fgfrs.NewSource(client), nil
+}
+
+func newFSFSESource(timeout, interval time.Duration, maxBody int64, retries int) (*fsfse.Source, error) {
+	client, err := fsfse.NewClient(fsfse.ClientOptions{
+		Timeout:     timeout,
+		MinInterval: interval,
+		MaxBody:     maxBody,
+		Retries:     retries,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fsfse client: %w", err)
+	}
+	return fsfse.NewSource(client), nil
 }

@@ -167,7 +167,7 @@ Depends on: phases 4 to 9.
 - [x] Módulo I, Módulo II, and Segunda Divisão. Youth, women's, and amateur competitions on the same site are not collected. No Série A, B, or C is invented.
 - [x] Every year the FMF select lists. On 2026-11-01 that was Módulo I 2013–2026 and the other two divisions 2014–2026.
 - [x] Matches for every published phase. The classification table is stored once per club. A later table that only repeats those clubs is skipped.
-- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, Bahia, Santa Catarina, Paraná, and Rio Grande do Sul are collected.
+- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, Bahia, Santa Catarina, Paraná, Rio Grande do Sul, and Sergipe are collected.
 
 Acceptance, checked on 2026-11-01 against the Compose database and the API:
 
@@ -206,7 +206,7 @@ Depends on: phases 4 to 9.
 - [ ] Roraima, `www.futebolroraimense.com.br`. The host resolves. The fetched page has no standings table. Do not invent Série A, B, or C.
 - [x] Santa Catarina, FCF, `fcf.com.br`, source `fcf`. Série A, Série B, and Série C, 2023–2026. Cups, Recopa, women's, and youth stay out. The year index lists no earlier season. The table does not publish cards or a win percentage, so those fields are 0. Série C 2024 and 2025 publish 3 clubs. A named phase with no round number is stored as round 1.
 - [ ] São Paulo, `www.futebolpaulista.com.br`. The host returned 403. Do not bypass it. The adult divisions are A1, A2, and A3.
-- [ ] Sergipe, `fsf-se.com.br`. The championship index publishes adult Sergipano A1, A2, and, where the card exists, A3. Copa Lotese and Copa Governo do Estado stay out.
+- [x] Sergipe, FSF, `fsf-se.com.br`, source `fsf-se`. Sergipano A1 2020–2026, Sergipano A2 2020–2026, and Sergipano A3 2025 only. Copa Lotese and Copa Governo do Estado stay out. The table does not publish cards or a win percentage, so those fields are 0. A group box title is the standings group. The same title under two phases is stored as the phase name plus that title. A match card with no `/jogo/{id}` link is omitted. A2 2026 stored 12 matches. A match external id is the division key, the catalog year, and the jogo id.
 - [ ] Tocantins, `www.ftf.org.br`. No competition catalog was found.
 - [ ] Goiano 1ª Divisão 2025. Match `41180` lists the same club twice, so that season was not stored.
 - [ ] Pernambucano A1 and A2 2019 published no matches. A3 2024 badge `35767` has no published name.
@@ -219,5 +219,6 @@ Acceptance, checked on 2026-11-01 against the Compose database and the API:
 - Catarinense Série A 2023–2026: 80/12, 80/12, 74/12, 70/12. Série B 2023–2026: 50/9, 55/10, 46/9, 90/10. Série C 2023–2026: 21/6, 8/3, 8/3, 14/4. `GET /api/v1/competitions/catarinense-serie-a/seasons/2026/standings` returned source `fcf`, Brusque SAF, `GRUPO A`, 12 points, 6 played, yellow 0, red 0, win percentage 0. Chapecoense 1-1 Brusque SAF kicked off at `2026-01-06T22:00:00Z`.
 - Paranaense 2026: 54 matches and 12 standings. `GET /api/v1/competitions/paranaense/seasons/2026/standings` returned source `fpf-pr`, Londrina, `1ª FASE - GRUPO A`, 22 points, 12 played, win percentage 61. Segundona 2026: 59/10, led by Paraná Clube with 37 points. Terceirona 2026: 44/11.
 - Gauchão 2019–2026: 80/12, 74/12, 72/12, 72/12, 72/12, 76/12, 72/12, 64/12. Série A2 2019–2026: 126/16, 108/16, 126/16, 126/16, 126/16, 126/16, 119/16, 134/16. Série B 2019 and 2021–2026: 74/12, 66/14, 62/16, 62/16, 30/8, 38/9, 47/10. `GET /api/v1/competitions/gauchao/seasons/2026/standings` returned source `fgf-rs`, Internacional, `GRUPO A`, 15 points, 6 played, yellow 17, red 0, win percentage 83. Juventude 1-1 Ypiranga kicked off at `2026-01-10T19:00:00Z`. Gauchão 2018 and Série B 2020 are absent. Série B 2019 has 74 matches.
+- Sergipano A1 2020–2026: 40/8, 56/10, 56/10, 59/10, 59/10, 54/10, 55/10. A2 2020–2026: 77/18, 103/21, 86/20, 86/19, 131/25, 45/10, 12/12. A3 2025: 55/14. `GET /api/v1/competitions/sergipano-a1/seasons/2026/standings` returned source `fsf-se`, Sergipe, `Fase Classificatória`, 20 points, 9 played, yellow 0, red 0, win percentage 0. Desportiva 0-3 Confiança S.A. kicked off at `2026-01-10T19:00:00Z`. `GET /api/v1/competitions/sergipano-a3/seasons/2024` returned 404.
 - Série A 2026 stayed source `cbf`, led by Flamengo with 73 points.
-- The hourly worker container `df275f704aeb` was still image `3d5a314de6ce` after the Bahia, Santa Catarina, Paraná, and Rio Grande do Sul one-shots. Docker Desktop died once; the same containers were started again.
+- The hourly worker container `df275f704aeb` was still image `3d5a314de6ce` after the Bahia, Santa Catarina, Paraná, Rio Grande do Sul, and Sergipe one-shots. Docker Desktop died once; the same containers were started again.

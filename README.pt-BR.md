@@ -54,6 +54,7 @@ Este projeto não tem vínculo com a CBF, a FMF, nenhum clube nem nenhuma emisso
 - **Campeonato Catarinense.** Série A, Série B e Série C. Códigos `catarinense-serie-a`, `catarinense-serie-b`, `catarinense-serie-c`. Fonte `fcf`.
 - **Paraná.** Paranaense, Segundona e Terceirona. Códigos `paranaense`, `paranaense-segundona`, `paranaense-terceirona`. Fonte `fpf-pr`. A Copa Paraná não entra.
 - **Gauchão.** Gauchão, Gauchão Série A2 e Gauchão Série B. Códigos `gauchao`, `gauchao-serie-a2`, `gauchao-serie-b`. Fonte `fgf-rs`. O host é `www.fgf.com.br`, não o `fgf.esp.br` de Goiás. Copa FGF e Recopa não entram.
+- **Sergipano.** A1, A2 e A3 quando o catálogo publica o card. Códigos `sergipano-a1`, `sergipano-a2`, `sergipano-a3`. Fonte `fsf-se`. O host é `fsf-se.com.br`. Copa Lotese e Copa Governo do Estado não entram.
 
 `all` é essa lista, nessa ordem: o catálogo da CBF, depois o Mineiro, depois as divisões estaduais em `internal/catalog`. Base, feminino, amador e copas no site de uma federação ficam de fora. Divisão que o catálogo não nomeia não é inventada.
 
@@ -64,13 +65,14 @@ O scraper antigo em PHP e o front estático ficam em `legacy/`, só como referê
 - **Placar ausente, horário ausente.** Placar e horário que a fonte não publicou vêm `null`. Um 0-0 de verdade continua 0-0.
 - **Horários.** O início do jogo é gravado em UTC e devolvido em RFC 3339.
 - **Tabela oficial.** Pontos, saldo de gols e os outros números são copiados, inclusive um saldo que não fecha com os gols. `group_name` é o nome oficial do grupo. Fica vazio quando a página não tem título de grupo. Uma tabela única costuma sair como `GRUPO ÚNICO`. Divisão com grupos repete `position` dentro de cada grupo. As linhas seguem a ordem publicada dos grupos e, dentro do grupo, a posição. A Copa do Brasil não tem tabela, então essa lista vem vazia. Uma fase posterior do Mineiro que só repete clubes já gravados na classificação é ignorada.
-- **Cartões.** As tabelas da FMF, da FBF, da FCF e do Paraná não publicam cartões, então `yellow_cards` e `red_cards` são 0 nessas temporadas. Um `*` no fim do número é nota de rodapé. O inteiro da célula é o que fica gravado. Um 0 publicado continua 0.
-- **Fonte.** `source.name` é o adaptador que gravou as linhas: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, `fcf`, `fpf-pr` ou `fgf-rs`. A lista de competições usa o adaptador da linha mais nova.
+- **Cartões.** As tabelas da FMF, da FBF, da FCF, do Paraná e de Sergipe não publicam cartões, então `yellow_cards` e `red_cards` são 0 nessas temporadas. Um `*` no fim do número é nota de rodapé. O inteiro da célula é o que fica gravado. Um 0 publicado continua 0.
+- **Fonte.** `source.name` é o adaptador que gravou as linhas: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, `fcf`, `fpf-pr`, `fgf-rs` ou `fsf-se`. A lista de competições usa o adaptador da linha mais nova.
 - **Pênaltis.** O placar de pênaltis é copiado quando a fonte publica, inclusive um 0 de um dos lados. Jogo sem disputa fica com pênaltis `null`. Um par `(0)` num cartão antigo do Baianão é placeholder e não é gravado.
 - **Aproveitamento no Baianão.** A página da FBF imprime um decimal. Ele é gravado como inteiro, arredondado pelo primeiro dígito decimal, metade para cima.
 - **Aproveitamento no Catarinense.** A página da FCF não publica esse número, então o inteiro gravado é 0.
 - **Aproveitamento no Paraná.** A página imprime um decimal. Ele é gravado como inteiro, arredondado pelo primeiro dígito decimal, metade para cima. 61,1% fica 61.
 - **Cartões e aproveitamento no Gauchão.** A tabela da FGF-RS publica os dois. Um percentual inteiro fica como impresso. Um decimal é arredondado pelo primeiro dígito decimal, metade para cima. Um distintivo de posição em branco mantém a ordem da linha. Uma linha com todas as estatísticas vazias é omitida.
+- **Cartões e aproveitamento no Sergipano.** A tabela da FSF-SE não publica nenhum dos dois, então os dois inteiros gravados são 0. O título da caixa de grupo é o grupo da classificação. O mesmo título em duas fases fica gravado como o nome da fase mais esse título. Um card de jogo sem id de jogo é omitido.
 - **Adiado.** Jogo adiado mantém a rodada original.
 - **Frescor.** `source.collection_status` é `ok` depois de uma sincronização que deu certo e `never_collected` quando ainda não há nada gravado. `source.stale` é verdadeiro quando o último sucesso é mais velho que `STALE_AFTER` (6 horas por padrão) ou quando uma coleta posterior falhou. As linhas anteriores ficam. O status de jogo `in_progress` existe no schema. O coletor atual não produz esse status.
 - **Frequência.** O intervalo padrão do worker é 1 hora.
@@ -101,12 +103,13 @@ No mesmo dia, one-shots separados gravaram as divisões adultas abaixo.
 - **Catarinense.** Série A 2023–2026: 80/12, 80/12, 74/12, 70/12. Série B 2023–2026: 50/9, 55/10, 46/9, 90/10. Série C 2023–2026: 21/6, 8/3, 8/3, 14/4. O índice de anos lista só 2023–2026. Copas, Recopa, feminino e base ficam de fora. Fonte `fcf`. `GET /api/v1/competitions/catarinense-serie-a/seasons/2026/standings` devolveu o Brusque SAF, grupo `GRUPO A`, 12 pontos, 6 jogos.
 - **Paraná.** O select lista só 2026. Paranaense 54/12, Segundona 59/10, Terceirona 44/11. A Copa Paraná fica de fora. Fonte `fpf-pr`. `GET /api/v1/competitions/paranaense/seasons/2026/standings` devolveu o Londrina, grupo `1ª FASE - GRUPO A`, 22 pontos, 12 jogos, aproveitamento 61. A Segundona é liderada pelo Paraná Clube, com 37 pontos.
 - **Gauchão.** Gauchão 2019–2026: 80/12, 74/12, 72/12, 72/12, 72/12, 76/12, 72/12, 64/12. Série A2 2019–2026: 126/16, 108/16, 126/16, 126/16, 126/16, 126/16, 119/16, 134/16. Série B 2019 e 2021–2026: 74/12, 66/14, 62/16, 62/16, 30/8, 38/9, 47/10. As páginas de 2017 e a Série A2 e a Série B de 2018 são cascas vazias. O Gauchão 2018 publicou um jogo e não foi gravado. A página de 2020 da Série B é a competição de 2019 e não foi gravada. Um slug datado de outro ano é ignorado, exceto o ano placeholder 1900. Fonte `fgf-rs`. `GET /api/v1/competitions/gauchao/seasons/2026/standings` devolveu o Internacional, grupo `GRUPO A`, 15 pontos, 6 jogos, 17 cartões amarelos, aproveitamento 83. Juventude 1-1 Ypiranga no Alfredo Jaconi começou em `2026-01-10T19:00:00Z`.
+- **Sergipano.** A1 2020–2026: 40/8, 56/10, 56/10, 59/10, 59/10, 54/10, 55/10. A2 2020–2026: 77/18, 103/21, 86/20, 86/19, 131/25, 45/10, 12/12. A3 só 2025: 55/14. A2 2026 omitiu cards agendados que não publicaram id de jogo. Fonte `fsf-se`. `GET /api/v1/competitions/sergipano-a1/seasons/2026/standings` devolveu o Sergipe, grupo `Fase Classificatória`, 20 pontos, 9 jogos. Desportiva 0-3 Confiança S.A. no Batistão começou em `2026-01-10T19:00:00Z`.
 
 ## O que ainda falta
 
-As outras federações estaduais não estão nesta coleta. A fase 13 do [ROADMAP.md](ROADMAP.md) acompanha cada uma: Acre, Amapá, Amazonas, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Piauí, Rio de Janeiro, Rio Grande do Norte, Rondônia, Roraima, São Paulo, Sergipe e Tocantins.
+As outras federações estaduais não estão nesta coleta. A fase 13 do [ROADMAP.md](ROADMAP.md) acompanha cada uma: Acre, Amapá, Amazonas, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Piauí, Rio de Janeiro, Rio Grande do Norte, Rondônia, Roraima, São Paulo e Tocantins.
 
-Acre e São Paulo responderam 403. A Paraíba fechou a conexão TLS. O Piauí falhou na validação do certificado. O coletor não contorna HTTP 403, verificação de certificado nem host que não resolveu. Roraima resolve e a página buscada não tem tabela. Sergipe publica cards de campeonato adulto em `fsf-se.com.br`.
+Acre e São Paulo responderam 403. A Paraíba fechou a conexão TLS. O Piauí falhou na validação do certificado. O coletor não contorna HTTP 403, verificação de certificado nem host que não resolveu. Roraima resolve e a página buscada não tem tabela.
 
 Dentro de catálogos que já são coletados, estas temporadas não foram gravadas: Goiano 1ª Divisão 2025, Pernambucano A1 e A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 e 2026, Baianão Série A 2027, Gauchão 2018 e Gauchão Série B 2020. O motivo de cada uma está em [Coletado](#o-que-já-foi-coletado).
 
@@ -183,7 +186,7 @@ Os ids de campeonato de 2026 são Série A `1260611`, Série B `1260612`, Série
 
 O catálogo é pedido uma vez por coleta. Cada temporada pede então os jogos e as alterações de data. Uma divisão também pede a página de classificação do ano. Quando essa página não tem tabela reconhecida, o coletor pede o mesmo caminho mais o id da primeira fase de pontos (`fase_tipo` `pontuacao`) e não usa uma fase eliminatória. A Copa do Brasil não tem página de classificação, então esse pedido é pulado. Os pedidos esperam pelo menos `SOURCE_MIN_INTERVAL` e repetem HTTP 429 e 5xx com `Retry-After` quando ele vem na resposta. Página de bloqueio, tabela vazia ou lista curta de jogos falha essa temporada e não substitui as linhas gravadas. Uma linha de jogo com o mesmo id de clube nos dois lados é omitida. Dois clubes com o mesmo nome e escudos diferentes ficam os dois.
 
-Série A e Série B aceitam um snapshot de pelo menos 100 jogos e 18–22 linhas de classificação. Série C aceita pelo menos 40 jogos e 8–40 linhas. Série D aceita pelo menos 20 jogos e 16–128 linhas. A Copa do Brasil aceita pelo menos 100 jogos e exatamente zero linhas de classificação. Módulo I e Módulo II aceitam pelo menos 30 jogos e 8–24 linhas. A Segunda Divisão aceita pelo menos 20 jogos e 8–48 linhas. As divisões do Distrito Federal, de Goiás e de Pernambuco aceitam pelo menos 8 jogos e 4–40 linhas. Maranhão, Mato Grosso, Alagoas e Bahia aceitam pelo menos 8 jogos e 4–48 linhas. Santa Catarina aceita pelo menos 8 jogos e 2–48 linhas. O Paraná aceita pelo menos 8 jogos e 4–48 linhas. O Rio Grande do Sul aceita pelo menos 8 jogos e 4–48 linhas.
+Série A e Série B aceitam um snapshot de pelo menos 100 jogos e 18–22 linhas de classificação. Série C aceita pelo menos 40 jogos e 8–40 linhas. Série D aceita pelo menos 20 jogos e 16–128 linhas. A Copa do Brasil aceita pelo menos 100 jogos e exatamente zero linhas de classificação. Módulo I e Módulo II aceitam pelo menos 30 jogos e 8–24 linhas. A Segunda Divisão aceita pelo menos 20 jogos e 8–48 linhas. As divisões do Distrito Federal, de Goiás e de Pernambuco aceitam pelo menos 8 jogos e 4–40 linhas. Maranhão, Mato Grosso, Alagoas e Bahia aceitam pelo menos 8 jogos e 4–48 linhas. Santa Catarina aceita pelo menos 8 jogos e 2–48 linhas. O Paraná aceita pelo menos 8 jogos e 4–48 linhas. O Rio Grande do Sul aceita pelo menos 8 jogos e 4–48 linhas. Sergipe aceita pelo menos 8 jogos e 4–48 linhas.
 
 As páginas do Mineiro são `https://www.fmf.com.br/Competicoes/ProxJogos.aspx?d=1` (Módulo I), `d=2` (Módulo II) e `d=3` (Segunda Divisão). A temporada é um POST de formulário com `request` igual à opção numérica da página. O coletor recusa qualquer outro host e qualquer outro caminho.
 
@@ -203,6 +206,7 @@ Cada adaptador estadual fica preso a um host. Os caminhos saem desse adaptador. 
 | `fcf` | `fcf` | `fcf.com.br` | Catarinense |
 | `fpfpr` | `fpf-pr` | `federacaopr.com.br` | Paranaense, Segundona, Terceirona |
 | `fgfrs` | `fgf-rs` | `www.fgf.com.br` | Gauchão, Gauchão Série A2, Gauchão Série B |
+| `fsfse` | `fsf-se` | `fsf-se.com.br` | Sergipano A1, A2, A3 |
 
 A sincronização pega um advisory lock do Postgres por competição e temporada. Página vazia, tabela quebrada ou resposta que não é HTML é coleta que falhou.
 

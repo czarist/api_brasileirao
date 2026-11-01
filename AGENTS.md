@@ -20,7 +20,8 @@ for the years on https://fcf.com.br/competicoes/profissionais/; FPF Paraná
 Paranaense, Segundona, and Terceirona for the years on
 https://federacaopr.com.br/campeonato/profissional/; FGF Rio Grande do Sul
 Gauchão, Gauchão Série A2, and Gauchão Série B from https://www.fgf.com.br
-(not Goiás fgf.esp.br). Federations without a
+(not Goiás fgf.esp.br); FSF Sergipe Sergipano A1, A2, and A3 from
+https://fsf-se.com.br. Federations without a
 working public catalog are not collected.
 Data is collected from those public sites and stored in PostgreSQL. HTTP
 handlers only read the database.
@@ -35,6 +36,7 @@ FBF public HTTP       ->  fbf adapter    ->
 FCF public HTTP       ->  fcf adapter    ->
 FPF-PR public HTTP    ->  fpfpr adapter  ->
 FGF-RS public HTTP    ->  fgfrs adapter  ->
+FSF-SE public HTTP    ->  fsfse adapter  ->
 ```
 
 Layout:
@@ -52,7 +54,8 @@ Layout:
 - `internal/scraper/fcf` collects adult Catarinense Série A, B, and C from `https://fcf.com.br` only. Paths are `/competicoes/profissionais/`, `/{year}/`, and `/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. Cups, Recopa, women's, and youth options are skipped.
 - `internal/scraper/fpfpr` collects adult Paraná from `https://federacaopr.com.br` only. Paths are `/campeonato/profissional/` and `/campeonato/profissional/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. The published names are Paranaense, Segundona, and Terceirona. Copa Paraná is not collected. Match pages and the logo host are not requested.
 - `internal/scraper/fgfrs` collects adult Gauchão, Gauchão Série A2, and Gauchão Série B from `https://www.fgf.com.br` only. Division ids are 23, 24, and 25. It does not use `SOURCE_BASE_URL`. Copa FGF and Recopa are refused. Paths under `/jogo/` are not requested. This host is not Goiás `fgf.esp.br`.
-- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, FBF, FCF, FPF-PR, and FGF-RS. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
+- `internal/scraper/fsfse` collects adult Sergipano A1, A2, and A3 from `https://fsf-se.com.br` only. It does not use `SOURCE_BASE_URL`. A3 is collected only in a year whose card the catalog publishes. Copa Lotese, Copa Governo do Estado, women's, and youth cards are refused. A match card with no `/jogo/{id}` link is omitted. Paths under `/jogo/` are not requested. Kickoffs use `America/Maceio`.
+- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, FBF, FCF, FPF-PR, FGF-RS, and FSF-SE. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
 - `internal/service` orchestrates sync and read use cases.
 - `internal/repository/postgres` is the only SQL.
 - `internal/httpapi` is the HTTP boundary.
