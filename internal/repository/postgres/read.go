@@ -275,69 +275,85 @@ func (s *Store) seasonMeta(ctx context.Context, seasonID int64) (domain.SourceMe
 	var lastSuccess *time.Time
 	var lastError *string
 	var collected *time.Time
+	var name string
 	err := s.pool.QueryRow(ctx, `
 		SELECT st.last_success_at,
 		       NULLIF(st.last_error, ''),
 		       GREATEST(
 		           (SELECT MAX(collected_at) FROM matches WHERE season_id = $1),
 		           (SELECT MAX(collected_at) FROM standings WHERE season_id = $1)
+		       ),
+		       COALESCE(
+		           (SELECT m.source FROM matches m WHERE m.season_id = $1 ORDER BY m.collected_at DESC NULLS LAST, m.id DESC LIMIT 1),
+		           (SELECT g.source FROM standings g WHERE g.season_id = $1 ORDER BY g.collected_at DESC NULLS LAST, g.id DESC LIMIT 1),
+		           ''
 		       )
 		FROM season_sync_state st
-		WHERE st.season_id = $1`, seasonID).Scan(&lastSuccess, &lastError, &collected)
+		WHERE st.season_id = $1`, seasonID).Scan(&lastSuccess, &lastError, &collected, &name)
 	if err != nil {
 		if unavailable(err) == domain.ErrNotFound {
-			return s.meta(nil, nil, nil), nil
+			return s.meta("", nil, nil, nil), nil
 		}
 		return domain.SourceMeta{}, unavailable(err)
 	}
-	return s.meta(lastSuccess, lastError, collected), nil
+	return s.meta(name, lastSuccess, lastError, collected), nil
 }
 
 func (s *Store) competitionMeta(ctx context.Context, competitionID int64) (domain.SourceMeta, error) {
 	var lastSuccess *time.Time
 	var lastError *string
 	var collected *time.Time
+	var name string
 	err := s.pool.QueryRow(ctx, `
 		SELECT st.last_success_at,
 		       NULLIF(st.last_error, ''),
-		       (SELECT MAX(m.collected_at) FROM matches m JOIN seasons s2 ON s2.id = m.season_id WHERE s2.competition_id = $1)
+		       (SELECT MAX(m.collected_at) FROM matches m JOIN seasons s2 ON s2.id = m.season_id WHERE s2.competition_id = $1),
+		       COALESCE(
+		           (SELECT m.source FROM matches m JOIN seasons sx ON sx.id = m.season_id WHERE sx.competition_id = $1 ORDER BY m.collected_at DESC NULLS LAST, m.id DESC LIMIT 1),
+		           ''
+		       )
 		FROM seasons s
 		JOIN season_sync_state st ON st.season_id = s.id
 		WHERE s.competition_id = $1
 		ORDER BY st.last_attempt_at DESC NULLS LAST
-		LIMIT 1`, competitionID).Scan(&lastSuccess, &lastError, &collected)
+		LIMIT 1`, competitionID).Scan(&lastSuccess, &lastError, &collected, &name)
 	if err != nil {
 		if unavailable(err) == domain.ErrNotFound {
-			return s.meta(nil, nil, nil), nil
+			return s.meta("", nil, nil, nil), nil
 		}
 		return domain.SourceMeta{}, unavailable(err)
 	}
-	return s.meta(lastSuccess, lastError, collected), nil
+	return s.meta(name, lastSuccess, lastError, collected), nil
 }
 
 func (s *Store) latestMeta(ctx context.Context) (domain.SourceMeta, error) {
 	var lastSuccess *time.Time
 	var lastError *string
 	var collected *time.Time
+	var name string
 	err := s.pool.QueryRow(ctx, `
 		SELECT st.last_success_at,
 		       NULLIF(st.last_error, ''),
-		       (SELECT MAX(collected_at) FROM matches)
+		       (SELECT MAX(collected_at) FROM matches),
+		       COALESCE((SELECT source FROM matches ORDER BY collected_at DESC NULLS LAST, id DESC LIMIT 1), '')
 		FROM season_sync_state st
 		ORDER BY st.last_attempt_at DESC NULLS LAST
-		LIMIT 1`).Scan(&lastSuccess, &lastError, &collected)
+		LIMIT 1`).Scan(&lastSuccess, &lastError, &collected, &name)
 	if err != nil {
 		if unavailable(err) == domain.ErrNotFound {
-			return s.meta(nil, nil, nil), nil
+			return s.meta("", nil, nil, nil), nil
 		}
 		return domain.SourceMeta{}, unavailable(err)
 	}
-	return s.meta(lastSuccess, lastError, collected), nil
+	return s.meta(name, lastSuccess, lastError, collected), nil
 }
 
-func (s *Store) meta(lastSuccess *time.Time, lastError *string, collected *time.Time) domain.SourceMeta {
+func (s *Store) meta(name string, lastSuccess *time.Time, lastError *string, collected *time.Time) domain.SourceMeta {
+	if name == "" {
+		name = domain.SourceCBF
+	}
 	meta := domain.SourceMeta{
-		Name:          domain.SourceCBF,
+		Name:          name,
 		CollectedAt:   collected,
 		LastSuccessAt: lastSuccess,
 	}

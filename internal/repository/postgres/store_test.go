@@ -65,7 +65,7 @@ func TestSyncIsIdempotentAndKeepsRowsAfterFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(standings) != 2 || standings[0].Points != 3 || !meta.Stale || meta.CollectionStatus != domain.CollectionOK {
+	if len(standings) != 2 || standings[0].Points != 3 || !meta.Stale || meta.CollectionStatus != domain.CollectionOK || meta.Name != domain.SourceCBF {
 		t.Fatalf("after failure standings=%+v meta=%+v", standings, meta)
 	}
 	again, err := store.ListMatches(ctx, snap.CompetitionCode, snap.SeasonYear, domain.MatchFilter{Page: 1, PageSize: 20})
@@ -114,6 +114,54 @@ func TestSyncIsIdempotentAndKeepsRowsAfterFailure(t *testing.T) {
 	}
 	if interrupted == 0 {
 		t.Fatal("an abandoned run was not marked failed")
+	}
+}
+
+func TestReadMetaUsesTheStoredAdapter(t *testing.T) {
+	store, _ := newTestStore(t)
+	ctx := context.Background()
+	cbfSnap := testSnapshot()
+	fmfSnap := testSnapshot()
+	fmfSnap.Source = domain.SourceFMF
+	fmfSnap.CompetitionCode = "mineiro-modulo-i"
+	fmfSnap.CompetitionName = "Campeonato Mineiro Módulo I"
+	fmfSnap.SeasonYear = 2098
+	fmfSnap.SeasonName = "MÓDULO I - 2098"
+	fmfSnap.SeasonExternalID = "1899"
+	fmfSnap.CollectedAt = cbfSnap.CollectedAt.Add(time.Hour)
+	for i := range fmfSnap.Matches {
+		fmfSnap.Matches[i].ExternalID = "fmf-" + fmfSnap.Matches[i].ExternalID
+	}
+	apply := func(snap domain.Snapshot) {
+		t.Helper()
+		session, err := store.BeginSync(ctx, snap.CompetitionCode, snap.SeasonYear)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := session.Apply(ctx, snap); err != nil {
+			session.Close()
+			t.Fatal(err)
+		}
+		session.Close()
+	}
+	apply(cbfSnap)
+	apply(fmfSnap)
+
+	_, cbfMeta, err := store.ListStandings(ctx, cbfSnap.CompetitionCode, cbfSnap.SeasonYear)
+	if err != nil || cbfMeta.Name != domain.SourceCBF {
+		t.Fatalf("serie a source: %v %+v", err, cbfMeta)
+	}
+	_, fmfMeta, err := store.ListStandings(ctx, fmfSnap.CompetitionCode, fmfSnap.SeasonYear)
+	if err != nil || fmfMeta.Name != domain.SourceFMF {
+		t.Fatalf("mineiro source: %v %+v", err, fmfMeta)
+	}
+	_, compMeta, err := store.GetCompetition(ctx, cbfSnap.CompetitionCode)
+	if err != nil || compMeta.Name != domain.SourceCBF {
+		t.Fatalf("serie a competition source: %v %+v", err, compMeta)
+	}
+	_, listMeta, err := store.ListCompetitions(ctx)
+	if err != nil || listMeta.Name != domain.SourceFMF {
+		t.Fatalf("list source: %v %+v", err, listMeta)
 	}
 }
 

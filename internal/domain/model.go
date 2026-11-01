@@ -29,8 +29,18 @@ func (s MatchStatus) Valid() bool {
 	}
 }
 
-// Source name published by the CBF adapter.
-const SourceCBF = "cbf"
+// Source names published by the adapters.
+const (
+	SourceCBF   = "cbf"
+	SourceFMF   = "fmf"
+	SourceFFDF  = "ffdf"
+	SourceFGFGO = "fgf-go"
+	SourceFPFPE = "fpf-pe"
+	SourceFMFMA = "fmf-ma"
+	SourceFMFMT = "fmf-mt"
+	SourceFAFAL = "faf-al"
+	SourceFBF   = "fbf"
+)
 
 // Collection states returned with API payloads.
 const (
