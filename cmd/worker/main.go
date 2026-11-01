@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/czarist/api_brasileirao/internal/catalog"
 	"github.com/czarist/api_brasileirao/internal/config"
 	"github.com/czarist/api_brasileirao/internal/domain"
 	"github.com/czarist/api_brasileirao/internal/repository/postgres"
@@ -36,7 +37,7 @@ func main() {
 	if *competitionFlag != "" {
 		spec = *competitionFlag
 	}
-	codes, err := cbf.ParseCodes(spec)
+	codes, err := catalog.Parse(spec)
 	if err != nil {
 		log.Error("competition", "error", err.Error())
 		os.Exit(1)
@@ -75,19 +76,38 @@ func main() {
 		log.Error("source client", "error", err.Error())
 		os.Exit(1)
 	}
-	source := cbf.NewSource(client)
+	fmfClient, err := newFMFClient(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	portalSource, err := newPortalSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	uikitSource, err := newUikitSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	fafalSource, err := newFafalSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	fbfSource, err := newFBFSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	source := newRouter(client, fmfClient, portalSource, uikitSource, fafalSource, fbfSource)
 	syncer := service.New(storeGate{Store: postgres.New(pool, cfg.StaleAfter)}, source, domain.Limits{
 		MinMatches:   cfg.MinMatches,
 		MinStandings: cfg.MinStandings,
 		MaxStandings: cfg.MaxStandings,
 	}, log)
-	syncer.SetLimitsFor(func(code string) (domain.Limits, bool) {
-		comp, ok := cbf.Lookup(code)
-		if !ok {
-			return domain.Limits{}, false
-		}
-		return comp.Limits(), true
-	})
+	syncer.SetLimitsFor(limitsFor)
 
 	run := func() error {
 		source.Reset()
@@ -98,9 +118,9 @@ func main() {
 			return err
 		}
 		if !allYears {
-			filtered := make([]cbf.SeasonPlan, 0, len(codes))
+			filtered := make([]seasonPlan, 0, len(codes))
 			for _, plan := range plans {
-				if plan.Year == year {
+				if plan.year == year {
 					filtered = append(filtered, plan)
 				}
 			}
@@ -116,7 +136,7 @@ func main() {
 				return err
 			}
 			runCtx, runCancel := context.WithTimeout(ctx, cfg.SyncTimeout)
-			err := syncer.Sync(runCtx, plan.Competition.Code, plan.Year)
+			err := syncer.Sync(runCtx, plan.code, plan.year)
 			runCancel()
 			if err != nil {
 				if ctx.Err() != nil {

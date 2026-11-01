@@ -43,6 +43,10 @@ func TestLoadRequiresPostgresURL(t *testing.T) {
 	if cfg.SyncInterval.String() != "1h0m0s" || cfg.SourceBaseURL != "https://www.cbf.com.br" || cfg.SyncAllYears {
 		t.Fatalf("defaults = %+v", cfg)
 	}
+	t.Setenv("SYNC_COMPETITION", "mineiro-modulo-i")
+	if _, err := Load(); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestLoadDotEnvDoesNotOverride(t *testing.T) {
