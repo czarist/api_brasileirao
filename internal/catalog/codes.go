@@ -9,6 +9,7 @@ import (
 	"github.com/czarist/api_brasileirao/internal/scraper/fafal"
 	"github.com/czarist/api_brasileirao/internal/scraper/fbf"
 	"github.com/czarist/api_brasileirao/internal/scraper/fcf"
+	"github.com/czarist/api_brasileirao/internal/scraper/fgfrs"
 	"github.com/czarist/api_brasileirao/internal/scraper/fmf"
 	"github.com/czarist/api_brasileirao/internal/scraper/fpfpr"
 	"github.com/czarist/api_brasileirao/internal/scraper/portal"
@@ -31,7 +32,8 @@ func Parse(spec string) ([]string, error) {
 		codes = append(codes, fafal.Codes()...)
 		codes = append(codes, fbf.Codes()...)
 		codes = append(codes, fcf.Codes()...)
-		return append(codes, fpfpr.Codes()...), nil
+		codes = append(codes, fpfpr.Codes()...)
+		return append(codes, fgfrs.Codes()...), nil
 	}
 	parts := strings.Split(spec, ",")
 	codes := make([]string, 0, len(parts))
@@ -49,7 +51,9 @@ func Parse(spec string) ([]string, error) {
 							if _, ok = fbf.Lookup(part); !ok {
 								if _, ok = fcf.Lookup(part); !ok {
 									if _, ok = fpfpr.Lookup(part); !ok {
-										return nil, fmt.Errorf("unsupported competition %s", part)
+										if _, ok = fgfrs.Lookup(part); !ok {
+											return nil, fmt.Errorf("unsupported competition %s", part)
+										}
 									}
 								}
 							}

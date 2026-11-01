@@ -111,7 +111,12 @@ func main() {
 		log.Error("source client", "error", err.Error())
 		os.Exit(1)
 	}
-	source := newRouter(client, fmfClient, portalSource, uikitSource, fafalSource, fbfSource, fcfSource, fpfprSource)
+	fgfrsSource, err := newFGFRSSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	source := newRouter(client, fmfClient, portalSource, uikitSource, fafalSource, fbfSource, fcfSource, fpfprSource, fgfrsSource)
 	syncer := service.New(storeGate{Store: postgres.New(pool, cfg.StaleAfter)}, source, domain.Limits{
 		MinMatches:   cfg.MinMatches,
 		MinStandings: cfg.MinStandings,

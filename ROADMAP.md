@@ -167,7 +167,7 @@ Depends on: phases 4 to 9.
 - [x] Módulo I, Módulo II, and Segunda Divisão. Youth, women's, and amateur competitions on the same site are not collected. No Série A, B, or C is invented.
 - [x] Every year the FMF select lists. On 2026-11-01 that was Módulo I 2013–2026 and the other two divisions 2014–2026.
 - [x] Matches for every published phase. The classification table is stored once per club. A later table that only repeats those clubs is skipped.
-- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, Bahia, Santa Catarina, and Paraná are collected.
+- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, Bahia, Santa Catarina, Paraná, and Rio Grande do Sul are collected.
 
 Acceptance, checked on 2026-11-01 against the Compose database and the API:
 
@@ -201,7 +201,7 @@ Depends on: phases 4 to 9.
 - [ ] Piauí. Certificate validation failed. Do not disable certificate checks.
 - [ ] Rio de Janeiro, `www.fferj.com.br`. Five masculine divisions are published: Série A, A2, B1, B2, and C. Copa Rio, women's, and youth stay out. A second host stays off the allowlist until a full public season page is fetched.
 - [ ] Rio Grande do Norte, `www.fnf.org.br`. No competition catalog was confirmed.
-- [ ] Rio Grande do Sul, `www.fgf.com.br`. This is not Goiás `fgf.esp.br`. The adult divisions are Gauchão, Gauchão Série A2, and Gauchão Série B. Copa FGF and Recopa stay out. The 2026 Gauchão phase page publishes matches and a classification table.
+- [x] Rio Grande do Sul, FGF, `www.fgf.com.br`, source `fgf-rs`. This is not Goiás `fgf.esp.br`. Gauchão 2019–2026, Gauchão Série A2 2019–2026, and Gauchão Série B 2019 and 2021–2026. Copa FGF and Recopa stay out. No Série C. Empty year shells and Gauchão 2018 (one published match) were not stored. The Série B 2020 year page is the 2019 competition and was not stored. The table publishes cards and the win percentage. A blank position badge keeps the row order. A row whose stat cells are all empty is omitted. A match external id is the division id, the catalog year, and the jogo slug.
 - [ ] Rondônia, `www.ffer.com.br`. No match catalog was confirmed.
 - [ ] Roraima, `www.futebolroraimense.com.br`. The host resolves. The fetched page has no standings table. Do not invent Série A, B, or C.
 - [x] Santa Catarina, FCF, `fcf.com.br`, source `fcf`. Série A, Série B, and Série C, 2023–2026. Cups, Recopa, women's, and youth stay out. The year index lists no earlier season. The table does not publish cards or a win percentage, so those fields are 0. Série C 2024 and 2025 publish 3 clubs. A named phase with no round number is stored as round 1.
@@ -218,5 +218,6 @@ Acceptance, checked on 2026-11-01 against the Compose database and the API:
 - Baianão Série A 2026: 48 matches and 10 standings. `GET /api/v1/competitions/baiano-serie-a/seasons/2026/standings` returned source `fbf`, Bahia, `Grupo 1`, 23 points, 9 played. Série B 2013 has 46 matches and 10 standings.
 - Catarinense Série A 2023–2026: 80/12, 80/12, 74/12, 70/12. Série B 2023–2026: 50/9, 55/10, 46/9, 90/10. Série C 2023–2026: 21/6, 8/3, 8/3, 14/4. `GET /api/v1/competitions/catarinense-serie-a/seasons/2026/standings` returned source `fcf`, Brusque SAF, `GRUPO A`, 12 points, 6 played, yellow 0, red 0, win percentage 0. Chapecoense 1-1 Brusque SAF kicked off at `2026-01-06T22:00:00Z`.
 - Paranaense 2026: 54 matches and 12 standings. `GET /api/v1/competitions/paranaense/seasons/2026/standings` returned source `fpf-pr`, Londrina, `1ª FASE - GRUPO A`, 22 points, 12 played, win percentage 61. Segundona 2026: 59/10, led by Paraná Clube with 37 points. Terceirona 2026: 44/11.
+- Gauchão 2019–2026: 80/12, 74/12, 72/12, 72/12, 72/12, 76/12, 72/12, 64/12. Série A2 2019–2026: 126/16, 108/16, 126/16, 126/16, 126/16, 126/16, 119/16, 134/16. Série B 2019 and 2021–2026: 74/12, 66/14, 62/16, 62/16, 30/8, 38/9, 47/10. `GET /api/v1/competitions/gauchao/seasons/2026/standings` returned source `fgf-rs`, Internacional, `GRUPO A`, 15 points, 6 played, yellow 17, red 0, win percentage 83. Juventude 1-1 Ypiranga kicked off at `2026-01-10T19:00:00Z`. Gauchão 2018 and Série B 2020 are absent. Série B 2019 has 74 matches.
 - Série A 2026 stayed source `cbf`, led by Flamengo with 73 points.
-- The hourly worker container `df275f704aeb` was still the previous image after the Bahia, Santa Catarina, and Paraná one-shots.
+- The hourly worker container `df275f704aeb` was still image `3d5a314de6ce` after the Bahia, Santa Catarina, Paraná, and Rio Grande do Sul one-shots. Docker Desktop died once; the same containers were started again.
