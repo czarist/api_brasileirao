@@ -112,9 +112,9 @@ No mesmo dia, one-shots separados gravaram as divisões adultas abaixo.
 
 As outras federações estaduais não estão nesta coleta. A fase 13 do [ROADMAP.md](ROADMAP.md) acompanha cada uma: Acre, Amapá, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Piauí, Rio de Janeiro, Rio Grande do Norte, Rondônia, Roraima, São Paulo e Tocantins.
 
-Acre e São Paulo responderam 403. A Paraíba fechou a conexão TLS. O Piauí falhou na validação do certificado. O coletor não contorna HTTP 403, verificação de certificado nem host que não resolveu. Roraima resolve e a página buscada não tem tabela.
+O Acre respondeu 403 da Cloudflare. São Paulo respondeu um desafio da Cloudflare. A Paraíba é um domínio estacionado. O Piauí falhou na validação do certificado. Os caminhos de 2025 e 2026 do Ceará responderam 404. Amapá, Mato Grosso do Sul, Rio Grande do Norte, Rondônia, Roraima e Tocantins não têm catálogo de jogos e classificação. O segundo host do Rio de Janeiro é uma página de script, sem jogos no HTML. Espírito Santo e Pará publicam temporadas adultas e ainda não foram coletados. O coletor não contorna HTTP 403, desafio da Cloudflare, verificação de certificado nem página de domínio estacionado.
 
-Dentro de catálogos que já são coletados, estas temporadas não foram gravadas: Goiano 1ª Divisão 2025, Pernambucano A1 e A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 e 2026, Baianão Série A 2027, Gauchão 2018 e Gauchão Série B 2020. O motivo de cada uma está em [Coletado](#o-que-já-foi-coletado).
+Dentro de catálogos que já são coletados, estas temporadas ou jogos não foram gravados: Goiano 1ª Divisão 2025, Pernambucano A1 e A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 e 2026, Baianão Série A 2027, Gauchão 2018, Gauchão Série B 2020, a final do Amazonense Série B 2021 e os cards do Sergipano A2 2026 sem id de jogo. O motivo de cada um está em [Coletado](#o-que-já-foi-coletado) e no [ROADMAP.md](ROADMAP.md).
 
 ## Começo rápido
 
