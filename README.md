@@ -112,9 +112,9 @@ The same day, separate one-shots stored the adult state divisions below.
 
 The other state federations are not in this collection. [ROADMAP.md](ROADMAP.md) phase 13 tracks each one: Acre, Amapá, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Piauí, Rio de Janeiro, Rio Grande do Norte, Rondônia, Roraima, São Paulo, and Tocantins.
 
-Acre and São Paulo returned 403. Paraíba closed the TLS connection. Piauí failed certificate validation. The collector does not bypass HTTP 403, certificate checks, or a host that did not resolve. Roraima resolves and the fetched page has no standings table.
+Acre returned 403 from Cloudflare. São Paulo returned a Cloudflare challenge. Paraíba is a parked domain. Piauí failed certificate validation. Ceará's 2025 and 2026 season paths returned 404. Amapá, Mato Grosso do Sul, Rio Grande do Norte, Rondônia, Roraima, and Tocantins have no match and standings catalog. Rio de Janeiro's second host is a script shell with no matches in the HTML. Espírito Santo and Pará publish adult seasons and are not collected yet. The collector does not bypass HTTP 403, a Cloudflare challenge, certificate checks, or a parked page.
 
-Inside catalogs that are already collected, these seasons were not stored: Goiano 1ª Divisão 2025, Pernambucano A1 and A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 and 2026, Baianão Série A 2027, Gauchão 2018, and Gauchão Série B 2020. The reason for each one is in [Collected](#collected).
+Inside catalogs that are already collected, these seasons or matches were not stored: Goiano 1ª Divisão 2025, Pernambucano A1 and A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 and 2026, Baianão Série A 2027, Gauchão 2018, Gauchão Série B 2020, the Amazonense Série B 2021 final, and the Sergipano A2 2026 cards with no jogo id. The reason for each one is in [Collected](#collected) and in [ROADMAP.md](ROADMAP.md).
 
 ## Quick start
 

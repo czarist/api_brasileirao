@@ -189,28 +189,32 @@ Depends on: phases 4 to 9.
 - [x] Mato Grosso, `www.fmfmt.com.br`, source `fmf-mt`. 1ª Divisão 2020–2026 and II Divisão 2021–2026. No 3ª Divisão.
 - [x] Alagoas, FAF, `www.futeboldealagoas.net`, source `faf-al`. Série A for 2020 and 2022–2026. Série B for 2022–2024. The 2021 catalog has no adult Série A. Later B cards are Sub-23. No Série C.
 - [x] Bahia, FBF, `www.fbf.org.br`, source `fbf`. Baianão Série A 2011–2026 and Série B 2011–2026. Série A 2027 listed five fixtures and was not stored. No Série C.
-- [ ] Acre. The probed hosts returned 403 or did not resolve. Do not bypass the 403.
-- [ ] Amapá, `fafamapa.com.br`. The professional pages are a landing site, not a match and standings catalog. No Série C in the menu.
+- [ ] Acre, `www.futebolacreano.com`. The host returned 403 from Cloudflare. Do not bypass it. No season page was collected.
+- [ ] Amapá, `fafamapa.com.br`. The professional URLs are news listings and publish no standings table. No Série C. Not a match catalog.
 - [x] Amazonas, FAF, `fafamazonas.com.br`, source `faf-am`. Campeonato Amazonense 2015, 2016, and 2018–2022, Amazonense Série A 2017 and 2023–2026, and Amazonense Série B 2017–2026. Years without Série A or Série B in the title stay Campeonato Amazonense. No adult Série C. The table does not publish cards or a win percentage, so those fields are 0. A score cell with two parenthetical groups is omitted. Súmula and borderô files are not requested. A match external id is the division key, the catalog year, the kickoff date, and the two club ids.
-- [ ] Ceará. No current public season catalog was confirmed.
-- [ ] Espírito Santo, `futebolcapixaba.com`. The page did not show adult division names.
-- [ ] Mato Grosso do Sul, `www.futebolms.com.br`. The page links out to a second host. That host stays off the allowlist until a full public season page is fetched.
-- [ ] Pará, `www.fpfpara.com.br`. Collect A1, A2, and A3. Pré-A3 is a fourth published name. Do not store it as Série C.
-- [ ] Paraíba. The TLS connection closed. Do not disable certificate checks.
+- [ ] Ceará, `www.futebolcearense.com.br`. The site redirects to `/2023/homepage.asp`. The 2025 and 2026 homepage and campeonatos paths returned 404. Série C is a club-list name on the old homepage. Do not store it until a season page publishes matches and standings.
+- [ ] Espírito Santo, FES, `futebolcapixaba.com`. The adult archive publishes Estadual Série A and Estadual Série B. No adult Série C. Those season pages are not collected. Sub, feminino, interligas, and Copa ES stay out.
+- [ ] Mato Grosso do Sul, `www.futebolms.com.br`. `/campeonatos` returned no standings table. A second host stays off the allowlist until a season page publishes matches and standings.
+- [ ] Pará, `www.fpfpara.com.br`. The fetched 2026 catalog publishes Série A1, Série A2, Série A3, and Pré-A3. Pré-A3 stays under that name. Do not store it as Série C. Copa Grão Pará, Super Copa, women's, and youth stay out. The year index that was fetched returned the same 2026 links, so older years are not collected. Matches and standings are not collected.
+- [ ] Paraíba, `www.federacaoparaibana.com.br`. The host returned a parked domain page. Do not scrape it.
 - [x] Paraná, FPF, `federacaopr.com.br`, source `fpf-pr`. Paranaense, Segundona, and Terceirona, 2026 only. Copa Paraná stays out. The names are not renamed to Série A, B, or C. The table does not publish cards. The win percentage is the published decimal, rounded by the first decimal digit.
-- [ ] Piauí. Certificate validation failed. Do not disable certificate checks.
-- [ ] Rio de Janeiro, `www.fferj.com.br`. Five masculine divisions are published: Série A, A2, B1, B2, and C. Copa Rio, women's, and youth stay out. A second host stays off the allowlist until a full public season page is fetched.
-- [ ] Rio Grande do Norte, `www.fnf.org.br`. No competition catalog was confirmed.
+- [ ] Piauí, `www.ffp.com.br`. Certificate validation failed (`SEC_E_WRONG_PRINCIPAL`). Do not disable certificate checks.
+- [ ] Rio de Janeiro, `www.fferj.com.br`. The federation page returned no standings table. Five masculine divisions are named on a second host: Série A, A2, B1, B2, and C. That page is a script shell and the saved HTML has no matches. Copa Rio, women's, and youth stay out. Do not allowlist it until a fixed same-host document contains matches and standings.
+- [ ] Rio Grande do Norte, `www.fnf.org.br`. The public pages are news and PDF links. Do not parse the PDFs. No match and standings catalog was confirmed.
 - [x] Rio Grande do Sul, FGF, `www.fgf.com.br`, source `fgf-rs`. This is not Goiás `fgf.esp.br`. Gauchão 2019–2026, Gauchão Série A2 2019–2026, and Gauchão Série B 2019 and 2021–2026. Copa FGF and Recopa stay out. No Série C. Empty year shells and Gauchão 2018 (one published match) were not stored. The Série B 2020 year page is the 2019 competition and was not stored. The table publishes cards and the win percentage. A blank position badge keeps the row order. A row whose stat cells are all empty is omitted. A match external id is the division id, the catalog year, and the jogo slug.
-- [ ] Rondônia, `www.ffer.com.br`. No match catalog was confirmed.
-- [ ] Roraima, `www.futebolroraimense.com.br`. The host resolves. The fetched page has no standings table. Do not invent Série A, B, or C.
+- [ ] Rondônia, `www.ffer.com.br`. No competition catalog was confirmed.
+- [ ] Roraima, `www.futebolroraimense.com.br`. The host resolves to a page with no standings table. Do not invent Série A, B, or C.
 - [x] Santa Catarina, FCF, `fcf.com.br`, source `fcf`. Série A, Série B, and Série C, 2023–2026. Cups, Recopa, women's, and youth stay out. The year index lists no earlier season. The table does not publish cards or a win percentage, so those fields are 0. Série C 2024 and 2025 publish 3 clubs. A named phase with no round number is stored as round 1.
-- [ ] São Paulo, `www.futebolpaulista.com.br`. The host returned 403. Do not bypass it. The adult divisions are A1, A2, and A3.
+- [ ] São Paulo, `www.futebolpaulista.com.br`. The host returned a Cloudflare challenge. Do not bypass it. The adult divisions remain A1, A2, and A3.
 - [x] Sergipe, FSF, `fsf-se.com.br`, source `fsf-se`. Sergipano A1 2020–2026, Sergipano A2 2020–2026, and Sergipano A3 2025 only. Copa Lotese and Copa Governo do Estado stay out. The table does not publish cards or a win percentage, so those fields are 0. A group box title is the standings group. The same title under two phases is stored as the phase name plus that title. A match card with no `/jogo/{id}` link is omitted. A2 2026 stored 12 matches. A match external id is the division key, the catalog year, and the jogo id.
-- [ ] Tocantins, `www.ftf.org.br`. No competition catalog was found.
+- [ ] Tocantins, `www.ftf.org.br`. The page is an application shell with no competition catalog.
 - [ ] Goiano 1ª Divisão 2025. Match `41180` lists the same club twice, so that season was not stored.
 - [ ] Pernambucano A1 and A2 2019 published no matches. A3 2024 badge `35767` has no published name.
 - [ ] Maranhense Série A 2026 and Série B 2024 and 2026 published no classification.
+- [ ] Gauchão 2018 published one match, below the minimum of 8, and was not stored. Gauchão Série B 2020 repeats the 2019 phases and was not stored.
+- [ ] Baianão Série A 2027 listed five fixtures and was not stored.
+- [ ] Amazonense Série B 2021 final. The score cell prints two unlabeled parenthetical groups, so that match was not stored.
+- [ ] Sergipano A2 2026. Eighteen scheduled cards published no `/jogo/{id}` link and were not stored. The season kept the 12 cards that had an id.
 
 Acceptance, checked on 2026-11-01 against the Compose database and the API:
 
