@@ -9,6 +9,7 @@ import (
 	"github.com/czarist/api_brasileirao/internal/domain"
 	"github.com/czarist/api_brasileirao/internal/scraper/cbf"
 	"github.com/czarist/api_brasileirao/internal/scraper/fafal"
+	"github.com/czarist/api_brasileirao/internal/scraper/fafam"
 	"github.com/czarist/api_brasileirao/internal/scraper/fbf"
 	"github.com/czarist/api_brasileirao/internal/scraper/fcf"
 	"github.com/czarist/api_brasileirao/internal/scraper/fgfrs"
@@ -30,13 +31,14 @@ type seasonPlan struct {
 // None of them uses SOURCE_BASE_URL. FAF stays on www.futeboldealagoas.net.
 // FBF stays on www.fbf.org.br. FCF stays on fcf.com.br.
 // FPF-PR stays on federacaopr.com.br. FGF-RS stays on www.fgf.com.br.
-// FSF-SE stays on fsf-se.com.br.
+// FSF-SE stays on fsf-se.com.br. FAF-AM stays on fafamazonas.com.br.
 type router struct {
 	cbf    *cbf.Source
 	fmf    *fmf.Source
 	portal *portal.Source
 	uikit  *uikit.Source
 	fafal  *fafal.Source
+	fafam  *fafam.Source
 	fbf    *fbf.Source
 	fcf    *fcf.Source
 	fpfpr  *fpfpr.Source
@@ -44,8 +46,8 @@ type router struct {
 	fsfse  *fsfse.Source
 }
 
-func newRouter(cbfClient *cbf.Client, fmfClient *fmf.Client, portalSource *portal.Source, uikitSource *uikit.Source, fafalSource *fafal.Source, fbfSource *fbf.Source, fcfSource *fcf.Source, fpfprSource *fpfpr.Source, fgfrsSource *fgfrs.Source, fsfseSource *fsfse.Source) router {
-	return router{cbf: cbf.NewSource(cbfClient), fmf: fmf.NewSource(fmfClient), portal: portalSource, uikit: uikitSource, fafal: fafalSource, fbf: fbfSource, fcf: fcfSource, fpfpr: fpfprSource, fgfrs: fgfrsSource, fsfse: fsfseSource}
+func newRouter(cbfClient *cbf.Client, fmfClient *fmf.Client, portalSource *portal.Source, uikitSource *uikit.Source, fafalSource *fafal.Source, fafamSource *fafam.Source, fbfSource *fbf.Source, fcfSource *fcf.Source, fpfprSource *fpfpr.Source, fgfrsSource *fgfrs.Source, fsfseSource *fsfse.Source) router {
+	return router{cbf: cbf.NewSource(cbfClient), fmf: fmf.NewSource(fmfClient), portal: portalSource, uikit: uikitSource, fafal: fafalSource, fafam: fafamSource, fbf: fbfSource, fcf: fcfSource, fpfpr: fpfprSource, fgfrs: fgfrsSource, fsfse: fsfseSource}
 }
 
 func (r router) Reset() {
@@ -59,10 +61,11 @@ func (r router) Reset() {
 	r.fpfpr.Reset()
 	r.fgfrs.Reset()
 	r.fsfse.Reset()
+	r.fafam.Reset()
 }
 
 func (r router) Plan(ctx context.Context, codes []string) ([]seasonPlan, error) {
-	cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes := splitCodes(codes)
+	cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fafamCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes := splitCodes(codes)
 	plans := make([]seasonPlan, 0, len(codes))
 	if len(cbfCodes) > 0 {
 		got, err := r.cbf.Plan(ctx, cbfCodes)
@@ -154,6 +157,15 @@ func (r router) Plan(ctx context.Context, codes []string) ([]seasonPlan, error) 
 			plans = append(plans, seasonPlan{code: plan.Code, year: plan.Year})
 		}
 	}
+	if len(fafamCodes) > 0 {
+		got, err := r.fafam.Plan(ctx, fafamCodes)
+		if err != nil {
+			return nil, err
+		}
+		for _, plan := range got {
+			plans = append(plans, seasonPlan{code: plan.Code, year: plan.Year})
+		}
+	}
 	sort.Slice(plans, func(i, j int) bool {
 		if plans[i].code != plans[j].code {
 			return plans[i].code < plans[j].code
@@ -191,10 +203,13 @@ func (r router) Fetch(ctx context.Context, competition string, year int, collect
 	if _, ok := fsfse.Lookup(competition); ok {
 		return r.fsfse.Fetch(ctx, competition, year, collected)
 	}
+	if _, ok := fafam.Lookup(competition); ok {
+		return r.fafam.Fetch(ctx, competition, year, collected)
+	}
 	return r.cbf.Fetch(ctx, competition, year, collected)
 }
 
-func splitCodes(codes []string) (cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes []string) {
+func splitCodes(codes []string) (cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fafamCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes []string) {
 	for _, code := range codes {
 		if _, ok := fmf.Lookup(code); ok {
 			fmfCodes = append(fmfCodes, code)
@@ -232,9 +247,13 @@ func splitCodes(codes []string) (cbfCodes, fmfCodes, portalCodes, uikitCodes, fa
 			fsfseCodes = append(fsfseCodes, code)
 			continue
 		}
+		if _, ok := fafam.Lookup(code); ok {
+			fafamCodes = append(fafamCodes, code)
+			continue
+		}
 		cbfCodes = append(cbfCodes, code)
 	}
-	return cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes
+	return cbfCodes, fmfCodes, portalCodes, uikitCodes, fafalCodes, fafamCodes, fbfCodes, fcfCodes, fpfprCodes, fgfrsCodes, fsfseCodes
 }
 
 func limitsFor(code string) (domain.Limits, bool) {
@@ -267,6 +286,9 @@ func limitsFor(code string) (domain.Limits, bool) {
 	}
 	if _, ok := fsfse.Lookup(code); ok {
 		return fsfse.Limits(), true
+	}
+	if _, ok := fafam.Lookup(code); ok {
+		return fafam.Limits(), true
 	}
 	return domain.Limits{}, false
 }
@@ -396,4 +418,17 @@ func newFSFSESource(timeout, interval time.Duration, maxBody int64, retries int)
 		return nil, fmt.Errorf("fsfse client: %w", err)
 	}
 	return fsfse.NewSource(client), nil
+}
+
+func newFAFAMSource(timeout, interval time.Duration, maxBody int64, retries int) (*fafam.Source, error) {
+	client, err := fafam.NewClient(fafam.ClientOptions{
+		Timeout:     timeout,
+		MinInterval: interval,
+		MaxBody:     maxBody,
+		Retries:     retries,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fafam client: %w", err)
+	}
+	return fafam.NewSource(client), nil
 }

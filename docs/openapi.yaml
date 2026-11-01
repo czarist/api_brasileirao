@@ -31,9 +31,11 @@ info:
     percentage. An integer percentage is stored as printed. A decimal is
     rounded by the first decimal digit. The FSF-SE table does not publish
     cards or a win percentage, so those fields are 0 for Sergipe seasons.
+    The FAF-AM table does not publish cards or a win percentage, so those
+    fields are 0 for Amazonas seasons.
     `source.name`
     is the adapter that stored the rows (`cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`,
-    `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, `fcf`, `fpf-pr`, `fgf-rs`, or `fsf-se`).
+    `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, `fcf`, `fpf-pr`, `fgf-rs`, `fsf-se`, or `faf-am`).
     On a list of every competition it is the adapter of the newest stored row.
 servers:
   - url: /
@@ -433,7 +435,7 @@ components:
       type: object
       required: [name, collected_at, last_success_at, stale, collection_status]
       properties:
-        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf, fcf, fpf-pr, fgf-rs, fsf-se]}
+        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf, fcf, fpf-pr, fgf-rs, fsf-se, faf-am]}
         collected_at:
           type: [string, "null"]
           format: date-time
