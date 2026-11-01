@@ -41,6 +41,7 @@ const (
 	SourceFAFAL = "faf-al"
 	SourceFBF   = "fbf"
 	SourceFCF   = "fcf"
+	SourceFPFPR = "fpf-pr"
 )
 
 // Collection states returned with API payloads.

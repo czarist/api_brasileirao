@@ -16,8 +16,10 @@ Módulo II, Segunda Divisão); FFDF Candangão Série A and B; FGF Goiás (fgf.e
 FMF Maranhão Série A and B; FMF Mato Grosso 1ª Divisão and II Divisão; FAF
 Alagoas Série A and, only for years the catalog names it, Série B; FBF Bahia
 Baianão Série A and Série B; FCF Santa Catarina Série A, Série B, and Série C
-for the years on https://fcf.com.br/competicoes/profissionais/. Federations
-without a working public catalog are not collected.
+for the years on https://fcf.com.br/competicoes/profissionais/; FPF Paraná
+Paranaense, Segundona, and Terceirona for the years on
+https://federacaopr.com.br/campeonato/profissional/. Federations without a
+working public catalog are not collected.
 Data is collected from those public sites and stored in PostgreSQL. HTTP
 handlers only read the database.
 
@@ -29,6 +31,7 @@ FMF-MA, FMF-MT        ->  uikit adapter  ->
 FAF public HTTP       ->  fafal adapter  ->
 FBF public HTTP       ->  fbf adapter    ->
 FCF public HTTP       ->  fcf adapter    ->
+FPF-PR public HTTP    ->  fpfpr adapter  ->
 ```
 
 Layout:
@@ -44,7 +47,8 @@ Layout:
 - `internal/scraper/fafal` collects Alagoas from `https://www.futeboldealagoas.net` only.
 - `internal/scraper/fbf` collects the adult Baianão from `https://www.fbf.org.br` only. Division paths are `/competicoes/1` and `/competicoes/2`. It does not use `SOURCE_BASE_URL`.
 - `internal/scraper/fcf` collects adult Catarinense Série A, B, and C from `https://fcf.com.br` only. Paths are `/competicoes/profissionais/`, `/{year}/`, and `/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. Cups, Recopa, women's, and youth options are skipped.
-- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, FBF, and FCF. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
+- `internal/scraper/fpfpr` collects adult Paraná from `https://federacaopr.com.br` only. Paths are `/campeonato/profissional/` and `/campeonato/profissional/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. The published names are Paranaense, Segundona, and Terceirona. Copa Paraná is not collected. Match pages and the logo host are not requested.
+- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, FBF, FCF, and FPF-PR. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
 - `internal/service` orchestrates sync and read use cases.
 - `internal/repository/postgres` is the only SQL.
 - `internal/httpapi` is the HTTP boundary.

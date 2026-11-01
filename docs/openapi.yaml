@@ -25,9 +25,11 @@ info:
     so `yellow_cards` and `red_cards` are 0 for Baianão seasons. Its win percentage
     is a decimal rounded to an integer by the first decimal digit. The FCF table
     does not publish cards or a win percentage, so those fields are 0 for
-    Catarinense seasons. `source.name`
+    Catarinense seasons. The Paraná table does not publish cards, so those
+    counts are 0. Its win percentage is a decimal rounded to an integer by the
+    first decimal digit. `source.name`
     is the adapter that stored the rows (`cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`,
-    `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, or `fcf`).
+    `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, `fcf`, or `fpf-pr`).
     On a list of every competition it is the adapter of the newest stored row.
 servers:
   - url: /
@@ -427,7 +429,7 @@ components:
       type: object
       required: [name, collected_at, last_success_at, stale, collection_status]
       properties:
-        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf, fcf]}
+        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf, fcf, fpf-pr]}
         collected_at:
           type: [string, "null"]
           format: date-time
