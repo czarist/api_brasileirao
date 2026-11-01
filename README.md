@@ -51,6 +51,11 @@ This project is not affiliated with the CBF, the FMF, any club, or any broadcast
 - **Mato-Grossense.** 1ª Divisão and II Divisão. Codes `mato-grossense-primeira-divisao`, `mato-grossense-segunda-divisao`. Source `fmf-mt`. The catalog has no 3ª Divisão.
 - **Campeonato Alagoano.** Série A, plus Série B where that catalog names an adult Série B. Codes `alagoano-serie-a`, `alagoano-serie-b`. Source `faf-al`. The catalog has no Série C.
 - **Baianão.** Série A and Série B. Codes `baiano-serie-a`, `baiano-serie-b`. Source `fbf`. The catalog has no adult Série C.
+- **Campeonato Catarinense.** Série A, Série B, and Série C. Codes `catarinense-serie-a`, `catarinense-serie-b`, `catarinense-serie-c`. Source `fcf`.
+- **Paraná.** Paranaense, Segundona, and Terceirona. Codes `paranaense`, `paranaense-segundona`, `paranaense-terceirona`. Source `fpf-pr`. Copa Paraná is not collected.
+- **Gauchão.** Gauchão, Gauchão Série A2, and Gauchão Série B. Codes `gauchao`, `gauchao-serie-a2`, `gauchao-serie-b`. Source `fgf-rs`. The host is `www.fgf.com.br`, not Goiás `fgf.esp.br`. Copa FGF and Recopa are not collected.
+- **Sergipano.** A1, A2, and A3 where the catalog publishes the card. Codes `sergipano-a1`, `sergipano-a2`, `sergipano-a3`. Source `fsf-se`. The host is `fsf-se.com.br`. Copa Lotese and Copa Governo do Estado are not collected.
+- **Amazonense.** Campeonato Amazonense, Série A, and Série B. Codes `amazonense`, `amazonense-serie-a`, `amazonense-serie-b`. Source `faf-am`. The host is `fafamazonas.com.br`. Years without Série A or Série B in the title stay Campeonato Amazonense. The catalog has no adult Série C.
 
 `all` is that list, in that order: the CBF catalog, then Mineiro, then the state divisions in `internal/catalog`. Youth, women's, amateur, and cup competitions on a state site stay out. A division the catalog does not name is not invented.
 
@@ -61,10 +66,15 @@ The previous PHP scraper and the static front end are kept under `legacy/` for r
 - **Missing score, missing kickoff.** Scores and kickoff times the source has not published are `null`. A real 0-0 stays 0-0.
 - **Times.** Kickoffs are stored in UTC and returned as RFC 3339.
 - **Official table.** Points, goal difference, and the other figures are copied, including a goal difference that does not match the raw goals. `group_name` is the official group title. It is empty when the page has no group title. A single table is often published as `GRUPO ÚNICO`. Grouped divisions repeat `position` inside each group. Rows follow the published group order, then position. Brazil Cup has no table, so that list is empty. A later Mineiro phase table that only repeats clubs already in the classification is skipped.
-- **Cards.** The FMF and FBF tables do not publish cards, so `yellow_cards` and `red_cards` are 0 for those seasons. A trailing `*` on a figure is a footnote. The integer in the cell is stored. A published 0 stays 0.
-- **Source.** `source.name` is the adapter that stored the rows: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al`, or `fbf`. A list of every competition uses the adapter of the newest stored row.
+- **Cards.** The FMF, FBF, FCF, Paraná, Sergipe, and Amazonas tables do not publish cards, so `yellow_cards` and `red_cards` are 0 for those seasons. A trailing `*` on a figure is a footnote. The integer in the cell is stored. A published 0 stays 0.
+- **Source.** `source.name` is the adapter that stored the rows: `cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`, `fmf-ma`, `fmf-mt`, `faf-al`, `fbf`, `fcf`, `fpf-pr`, `fgf-rs`, `fsf-se`, or `faf-am`. A list of every competition uses the adapter of the newest stored row.
 - **Penalties.** Penalty scores are copied when the source publishes them, including a published 0 on one side. A match without a shoot-out has null penalty scores. A `(0)` pair on an old Bahia card is a placeholder and is not stored.
 - **Win percentage on the Baianão.** The FBF page prints a decimal. It is stored as an integer, rounded by the first decimal digit, half up.
+- **Win percentage on the Catarinense.** The FCF page does not publish it, so the stored integer is 0.
+- **Win percentage in Paraná.** The page prints a decimal. It is stored as an integer, rounded by the first decimal digit, half up. 61.1% is stored as 61.
+- **Cards and win percentage on the Gauchão.** The FGF-RS table publishes both. An integer percentage is stored as printed. A decimal is rounded by the first decimal digit, half up. A blank position badge keeps the row order. A row whose stat cells are all empty is omitted.
+- **Cards and win percentage on the Sergipano.** The FSF-SE table publishes neither, so both stored integers are 0. A group box title is the standings group. The same title under two phases is stored as the phase name plus that title. A match card with no jogo id is omitted.
+- **Cards and win percentage on the Amazonense.** The FAF-AM table publishes neither, so both stored integers are 0. A champion mark and a trailing asterisk are not part of the club name. Nacional and Nacional Borba stay separate. A fixture printed twice with the same score and kickoff is stored once. A score cell with two parenthetical groups is omitted.
 - **Postponed.** Postponed matches keep their original round.
 - **Freshness.** `source.collection_status` is `ok` after a successful sync and `never_collected` when nothing has been stored. `source.stale` is true when the last success is older than `STALE_AFTER` (6 hours by default) or a later collection failed. The previous rows stay. The match status `in_progress` exists in the schema. The current collector does not produce it.
 - **Update frequency.** The default worker interval is 1 hour.
@@ -92,14 +102,19 @@ The same day, separate one-shots stored the adult state divisions below.
 - **Mato-Grossense.** 1ª Divisão 2020–2026: 61/10, 60/10, 55/10, 55/10, 57/10, 48/9, 53/10. II Divisão 2021–2026: 13/4, 25/10, 26/10, 41/11, 26/10, 28/10. No 2020 II Divisão. Source `fmf-mt`.
 - **Alagoano.** Série A 2020 and 2022–2026: 34/8, 38/8, 36/8, 36/8, 36/8, 34/8. The 2021 catalog has no adult Série A. Série B 2022–2024: 27/7, 51/10, 51/10. The 2025 and 2026 B cards are Sub-23. Source `faf-al`. `GET /api/v1/competitions/alagoano-serie-a/seasons/2026/standings` returned Asa, group `GRUPO A`, 17 points. Division A 2026 stayed `cbf`, led by Flamengo with 73 points.
 - **Baianão.** Série A 2011–2026: 114/12, 140/12, 76/11, 76/11, 56/12, 56/12, 61/11, then 51/10 for 2018–2024, 50/10 in 2025, and 48/10 in 2026. The 2027 select lists five fixtures and was not stored. Série B 2011–2026: 46/10, 46/10, 46/10, 47/10, 38/9, 32/6, 32/6, 31/6, 32/6, 17/6, 19/6, 72/12, 51/10, 51/10, 50/10, 51/10. Source `fbf`. Clubs that share `default.png` keep the published name. `GET /api/v1/competitions/baiano-serie-a/seasons/2026/standings` returned Bahia, group `Grupo 1`, 23 points, 9 played.
+- **Catarinense.** Série A 2023–2026: 80/12, 80/12, 74/12, 70/12. Série B 2023–2026: 50/9, 55/10, 46/9, 90/10. Série C 2023–2026: 21/6, 8/3, 8/3, 14/4. The year index lists 2023–2026 only. Cups, Recopa, women's, and youth stay out. Source `fcf`. `GET /api/v1/competitions/catarinense-serie-a/seasons/2026/standings` returned Brusque SAF, group `GRUPO A`, 12 points, 6 played.
+- **Paraná.** The select lists 2026 only. Paranaense 54/12, Segundona 59/10, Terceirona 44/11. Copa Paraná stays out. Source `fpf-pr`. `GET /api/v1/competitions/paranaense/seasons/2026/standings` returned Londrina, group `1ª FASE - GRUPO A`, 22 points, 12 played, win percentage 61. Segundona is led by Paraná Clube with 37 points.
+- **Gauchão.** Gauchão 2019–2026: 80/12, 74/12, 72/12, 72/12, 72/12, 76/12, 72/12, 64/12. Série A2 2019–2026: 126/16, 108/16, 126/16, 126/16, 126/16, 126/16, 119/16, 134/16. Série B 2019 and 2021–2026: 74/12, 66/14, 62/16, 62/16, 30/8, 38/9, 47/10. The 2017 pages and Série A2 and Série B 2018 are empty shells. Gauchão 2018 published one match and was not stored. The Série B 2020 year page is the 2019 competition and was not stored. A slug dated to another year is skipped, except the placeholder year 1900. Source `fgf-rs`. `GET /api/v1/competitions/gauchao/seasons/2026/standings` returned Internacional, group `GRUPO A`, 15 points, 6 played, 17 yellow cards, win percentage 83. Juventude 1-1 Ypiranga at Alfredo Jaconi kicked off at `2026-01-10T19:00:00Z`.
+- **Sergipano.** A1 2020–2026: 40/8, 56/10, 56/10, 59/10, 59/10, 54/10, 55/10. A2 2020–2026: 77/18, 103/21, 86/20, 86/19, 131/25, 45/10, 12/12. A3 2025 only: 55/14. A2 2026 omitted scheduled cards that published no jogo id. Source `fsf-se`. `GET /api/v1/competitions/sergipano-a1/seasons/2026/standings` returned Sergipe, group `Fase Classificatória`, 20 points, 9 played. Desportiva 0-3 Confiança S.A. at Batistão kicked off at `2026-01-10T19:00:00Z`.
+- **Amazonense.** Campeonato Amazonense 2015, 2016, and 2018–2022: 76/10, 40/7, 39/8, 64/8, 59/8, 42/9, 80/12. Série A 2017 and 2023–2026: 62/8, 50/9, 60/12, 39/8, 39/8. Série B 2017–2026: 15/5, 11/5, 11/5, 16/6, 24/7, 41/9, 12/7, 19/8, 23/14, 24/7. The Série B 2021 final cell had two unlabeled parenthetical groups and was omitted. Source `faf-am`. `GET /api/v1/competitions/amazonense-serie-a/seasons/2026/standings` returned Nacional, group `CLASSIFICAÇÃO GERAL`, 12 points, 7 played. Fast 0-2 Manaus in the 2019 Final Geral kicked off at `2019-04-25T00:00:00Z`.
 
 ## Still open
 
-The other state federations are not in this collection. [ROADMAP.md](ROADMAP.md) phase 13 tracks each one: Acre, Amapá, Amazonas, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Paraná, Piauí, Rio de Janeiro, Rio Grande do Norte, Rio Grande do Sul, Rondônia, Roraima, Santa Catarina, São Paulo, Sergipe, and Tocantins.
+The other state federations are not in this collection. [ROADMAP.md](ROADMAP.md) phase 13 tracks each one: Acre, Amapá, Ceará, Espírito Santo, Mato Grosso do Sul, Pará, Paraíba, Piauí, Rio de Janeiro, Rio Grande do Norte, Rondônia, Roraima, São Paulo, and Tocantins.
 
-Acre and São Paulo returned 403. Paraíba closed the TLS connection. Piauí failed certificate validation. Roraima and Sergipe did not resolve. The collector does not bypass HTTP 403, certificate checks, or a host that did not resolve. Rio Grande do Sul `www.fgf.com.br` is a different site from Goiás `fgf.esp.br`.
+Acre and São Paulo returned 403. Paraíba closed the TLS connection. Piauí failed certificate validation. The collector does not bypass HTTP 403, certificate checks, or a host that did not resolve. Roraima resolves and the fetched page has no standings table.
 
-Inside catalogs that are already collected, these seasons were not stored: Goiano 1ª Divisão 2025, Pernambucano A1 and A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 and 2026, and Baianão Série A 2027. The reason for each one is in [Collected](#collected).
+Inside catalogs that are already collected, these seasons were not stored: Goiano 1ª Divisão 2025, Pernambucano A1 and A2 2019, Pernambucano A3 2024, Maranhense Série A 2026, Maranhense Série B 2024 and 2026, Baianão Série A 2027, Gauchão 2018, and Gauchão Série B 2020. The reason for each one is in [Collected](#collected).
 
 ## Quick start
 
@@ -174,7 +189,7 @@ The 2026 championship ids are division A `1260611`, division B `1260612`, divisi
 
 The catalog is requested once per collection. Each season then requests fixtures and schedule changes. A division also requests the standings year page. When that page has no parsed table, the collector requests the same path plus the id of the first points phase (`fase_tipo` `pontuacao`) and does not use a knockout phase. Brazil Cup has no standings page, so that request is skipped. Requests wait at least `SOURCE_MIN_INTERVAL` and retry HTTP 429 and 5xx with `Retry-After` when it is present. A block page, an empty table, or a short fixture list fails that season and does not replace its stored rows. A fixture row that lists the same club id as home and away is omitted. Two clubs that share a name and have different badge ids both stay.
 
-Divisions A and B accept a snapshot of at least 100 matches and 18–22 standings rows. Division C accepts at least 40 matches and 8–40 rows. Division D accepts at least 20 matches and 16–128 rows. Brazil Cup accepts at least 100 matches and exactly zero standings rows. Módulo I and Módulo II accept at least 30 matches and 8–24 rows. Segunda Divisão accepts at least 20 matches and 8–48 rows. The Distrito Federal, Goiás, and Pernambuco divisions accept at least 8 matches and 4–40 rows. Maranhão, Mato Grosso, Alagoas, and Bahia accept at least 8 matches and 4–48 rows.
+Divisions A and B accept a snapshot of at least 100 matches and 18–22 standings rows. Division C accepts at least 40 matches and 8–40 rows. Division D accepts at least 20 matches and 16–128 rows. Brazil Cup accepts at least 100 matches and exactly zero standings rows. Módulo I and Módulo II accept at least 30 matches and 8–24 rows. Segunda Divisão accepts at least 20 matches and 8–48 rows. The Distrito Federal, Goiás, and Pernambuco divisions accept at least 8 matches and 4–40 rows. Maranhão, Mato Grosso, Alagoas, and Bahia accept at least 8 matches and 4–48 rows. Santa Catarina accepts at least 8 matches and 2–48 rows. Paraná accepts at least 8 matches and 4–48 rows. Rio Grande do Sul accepts at least 8 matches and 4–48 rows. Sergipe accepts at least 8 matches and 4–48 rows. Amazonas accepts at least 8 matches and 4–48 rows.
 
 The Mineiro pages are `https://www.fmf.com.br/Competicoes/ProxJogos.aspx?d=1` (Módulo I), `d=2` (Módulo II), and `d=3` (Segunda Divisão). A season is a form POST of `request` set to the numeric option on that page. The collector refuses any other host and any other path.
 
@@ -191,6 +206,11 @@ Each state adapter is locked to one host. Paths come from that adapter. A client
 | `uikit` | `fmf-mt` | `www.fmfmt.com.br` | Mato-Grossense |
 | `fafal` | `faf-al` | `www.futeboldealagoas.net` | Alagoano |
 | `fbf` | `fbf` | `www.fbf.org.br` | Baianão |
+| `fcf` | `fcf` | `fcf.com.br` | Catarinense |
+| `fpfpr` | `fpf-pr` | `federacaopr.com.br` | Paranaense, Segundona, Terceirona |
+| `fgfrs` | `fgf-rs` | `www.fgf.com.br` | Gauchão, Gauchão Série A2, Gauchão Série B |
+| `fsfse` | `fsf-se` | `fsf-se.com.br` | Sergipano A1, A2, A3 |
+| `fafam` | `faf-am` | `fafamazonas.com.br` | Campeonato Amazonense, Série A, Série B |
 
 Sync takes a Postgres advisory lock per competition and season. An empty page, a broken table, or a non-HTML response is a failed collection.
 
@@ -203,7 +223,7 @@ cmd/
   migrate/             # applies versioned SQL. The API and the worker do not migrate.
 internal/
   domain/              # types and snapshot validation
-  scraper/             # cbf, fmf, portal, uikit, fafal, fbf. Selectors stay here.
+  scraper/             # cbf, fmf, portal, uikit, fafal, fbf, fcf, fpfpr, fgfrs. Selectors stay here.
   catalog/             # competition codes. "all" is this list.
   service/             # sync and read use cases
   repository/postgres/ # the only SQL

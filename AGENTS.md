@@ -15,8 +15,15 @@ Módulo II, Segunda Divisão); FFDF Candangão Série A and B; FGF Goiás (fgf.e
 1ª Divisão, Divisão de Acesso, and 3ª Divisão; FPF Pernambuco A1, A2, and A3;
 FMF Maranhão Série A and B; FMF Mato Grosso 1ª Divisão and II Divisão; FAF
 Alagoas Série A and, only for years the catalog names it, Série B; FBF Bahia
-Baianão Série A and Série B. Federations without a working public catalog are
-not collected.
+Baianão Série A and Série B; FCF Santa Catarina Série A, Série B, and Série C
+for the years on https://fcf.com.br/competicoes/profissionais/; FPF Paraná
+Paranaense, Segundona, and Terceirona for the years on
+https://federacaopr.com.br/campeonato/profissional/; FGF Rio Grande do Sul
+Gauchão, Gauchão Série A2, and Gauchão Série B from https://www.fgf.com.br
+(not Goiás fgf.esp.br); FSF Sergipe Sergipano A1, A2, and A3 from
+https://fsf-se.com.br; FAF Amazonas Campeonato Amazonense, Amazonense Série A,
+and Amazonense Série B from https://fafamazonas.com.br. Federations without a
+working public catalog are not collected.
 Data is collected from those public sites and stored in PostgreSQL. HTTP
 handlers only read the database.
 
@@ -27,6 +34,11 @@ FFDF, FGF, FPF-PE     ->  portal adapter ->
 FMF-MA, FMF-MT        ->  uikit adapter  ->
 FAF public HTTP       ->  fafal adapter  ->
 FBF public HTTP       ->  fbf adapter    ->
+FCF public HTTP       ->  fcf adapter    ->
+FPF-PR public HTTP    ->  fpfpr adapter  ->
+FGF-RS public HTTP    ->  fgfrs adapter  ->
+FSF-SE public HTTP    ->  fsfse adapter  ->
+FAF-AM public HTTP    ->  fafam adapter  ->
 ```
 
 Layout:
@@ -41,7 +53,12 @@ Layout:
 - `internal/scraper/uikit` collects Maranhão (`www.futebolmaranhense.com.br`) and Mato Grosso (`www.fmfmt.com.br`). Each client is locked to its host.
 - `internal/scraper/fafal` collects Alagoas from `https://www.futeboldealagoas.net` only.
 - `internal/scraper/fbf` collects the adult Baianão from `https://www.fbf.org.br` only. Division paths are `/competicoes/1` and `/competicoes/2`. It does not use `SOURCE_BASE_URL`.
-- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, and FBF. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
+- `internal/scraper/fcf` collects adult Catarinense Série A, B, and C from `https://fcf.com.br` only. Paths are `/competicoes/profissionais/`, `/{year}/`, and `/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. Cups, Recopa, women's, and youth options are skipped.
+- `internal/scraper/fpfpr` collects adult Paraná from `https://federacaopr.com.br` only. Paths are `/campeonato/profissional/` and `/campeonato/profissional/{year}/{id}/`. It does not use `SOURCE_BASE_URL`. The published names are Paranaense, Segundona, and Terceirona. Copa Paraná is not collected. Match pages and the logo host are not requested.
+- `internal/scraper/fgfrs` collects adult Gauchão, Gauchão Série A2, and Gauchão Série B from `https://www.fgf.com.br` only. Division ids are 23, 24, and 25. It does not use `SOURCE_BASE_URL`. Copa FGF and Recopa are refused. Paths under `/jogo/` are not requested. This host is not Goiás `fgf.esp.br`.
+- `internal/scraper/fsfse` collects adult Sergipano A1, A2, and A3 from `https://fsf-se.com.br` only. It does not use `SOURCE_BASE_URL`. A3 is collected only in a year whose card the catalog publishes. Copa Lotese, Copa Governo do Estado, women's, and youth cards are refused. A match card with no `/jogo/{id}` link is omitted. Paths under `/jogo/` are not requested. Kickoffs use `America/Maceio`.
+- `internal/scraper/fafam` collects adult Campeonato Amazonense, Amazonense Série A, and Amazonense Série B from `https://fafamazonas.com.br` only. It does not use `SOURCE_BASE_URL`. The untitled years stay Campeonato Amazonense. There is no adult Série C. Women's, youth, and cup cards are refused. Súmula and borderô files are not requested. Kickoffs use `America/Manaus`.
+- `internal/catalog` expands `all` to the CBF codes, then FMF, portal, UIKit, FAF, FBF, FCF, FPF-PR, FGF-RS, FSF-SE, and FAF-AM. `cbf.ParseCodes("all")` stays the five CBF codes. Do not pass `all` to a one-shot unless a full re-walk is intended.
 - `internal/service` orchestrates sync and read use cases.
 - `internal/repository/postgres` is the only SQL.
 - `internal/httpapi` is the HTTP boundary.

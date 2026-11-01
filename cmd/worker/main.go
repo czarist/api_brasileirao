@@ -96,12 +96,37 @@ func main() {
 		log.Error("source client", "error", err.Error())
 		os.Exit(1)
 	}
+	fafamSource, err := newFAFAMSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
 	fbfSource, err := newFBFSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
 	if err != nil {
 		log.Error("source client", "error", err.Error())
 		os.Exit(1)
 	}
-	source := newRouter(client, fmfClient, portalSource, uikitSource, fafalSource, fbfSource)
+	fcfSource, err := newFCFSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	fpfprSource, err := newFPFPRSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	fgfrsSource, err := newFGFRSSource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	fsfseSource, err := newFSFSESource(cfg.SourceTimeout, cfg.SourceMinInterval, cfg.SourceMaxBody, cfg.SourceRetries)
+	if err != nil {
+		log.Error("source client", "error", err.Error())
+		os.Exit(1)
+	}
+	source := newRouter(client, fmfClient, portalSource, uikitSource, fafalSource, fafamSource, fbfSource, fcfSource, fpfprSource, fgfrsSource, fsfseSource)
 	syncer := service.New(storeGate{Store: postgres.New(pool, cfg.StaleAfter)}, source, domain.Limits{
 		MinMatches:   cfg.MinMatches,
 		MinStandings: cfg.MinStandings,
