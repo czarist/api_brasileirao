@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/czarist/api_brasileirao/internal/scraper/cbf"
+	"github.com/czarist/api_brasileirao/internal/catalog"
 )
 
 // Config is the validated runtime configuration.
@@ -193,7 +193,7 @@ func (cfg Config) validate() error {
 	default:
 		return fmt.Errorf("LOG_LEVEL must be debug, info, warn, or error")
 	}
-	if _, err := cbf.ParseCodes(cfg.SyncCompetition); err != nil {
+	if _, err := catalog.Parse(cfg.SyncCompetition); err != nil {
 		return fmt.Errorf("SYNC_COMPETITION: %w", err)
 	}
 	if cfg.SyncYear != 0 && (cfg.SyncYear < 1990 || cfg.SyncYear > 2100) {

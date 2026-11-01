@@ -1,0 +1,48 @@
+{
+  "1a Fase": {
+    "tipo": "eliminacao",
+    "jogos": [
+      {
+        "ref_jogo": "810242",
+        "num_jogo": "32",
+        "rodada": "1",
+        "estadio": "Zerão",
+        "cidade": "Macapa",
+        "uf": "AP",
+        "data": " 07/02/2018",
+        "hora": "19:30",
+        "mandante": {"nome": "Santos", "uf": "AP", "url_escudo": "https://conteudo.cbf.com.br/clubes/32794/escudo.jpg", "gols": "1", "panaltis": "0"},
+        "visitante": {"nome": "Sport Recife", "uf": "PE", "url_escudo": "https://conteudo.cbf.com.br/clubes/20010/escudo.jpg", "gols": "2", "panaltis": "0"}
+      },
+      {
+        "ref_jogo": "810211",
+        "num_jogo": "1",
+        "rodada": "1",
+        "estadio": "Lomanto Júnior",
+        "cidade": "Vitoria da Conquista",
+        "uf": "BA",
+        "data": " 30/01/2018",
+        "hora": "20:00",
+        "mandante": {"nome": "Vitória da Conquista", "uf": "BA", "url_escudo": "https://conteudo.cbf.com.br/clubes/21789/escudo.jpg", "gols": "0", "panaltis": ""},
+        "visitante": {"nome": "Boa", "uf": "MG", "url_escudo": "https://conteudo.cbf.com.br/clubes/21926/escudo.jpg", "gols": "0", "panaltis": ""}
+      }
+    ]
+  },
+  "Semi Finais": {
+    "tipo": "eliminacao",
+    "jogos": [
+      {
+        "ref_jogo": "835309",
+        "num_jogo": "152",
+        "rodada": "1",
+        "estadio": "Nubank Parque ",
+        "cidade": "Sao Paulo",
+        "uf": "SP",
+        "data": " 01/11/2026",
+        "hora": "16:00",
+        "mandante": {"nome": "Palmeiras", "uf": "SP", "url_escudo": "https://conteudo.cbf.com.br/clubes/20002/escudo.jpg", "gols": "", "panaltis": ""},
+        "visitante": {"nome": "Vasco da Gama Saf", "uf": "RJ", "url_escudo": "https://conteudo.cbf.com.br/clubes/60646/escudo.jpg", "gols": "", "panaltis": ""}
+      }
+    ]
+  }
+}

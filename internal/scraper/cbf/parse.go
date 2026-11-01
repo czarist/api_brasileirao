@@ -3,6 +3,7 @@ package cbf
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -15,6 +16,9 @@ import (
 )
 
 var teamHref = regexp.MustCompile(`/times/.+/(\d+)$`)
+
+// errSameClub is a source row that names one club on both sides. The row is not stored.
+var errSameClub = errors.New("same club on both sides")
 
 // ParseStandings reads the official table. Embedded classification groups win
 // when they contain at least as many rows as the HTML table. The club id in the
@@ -368,6 +372,11 @@ func ParseMatches(body []byte, loc *time.Location) ([]domain.MatchInput, []domai
 		}
 		for _, raw := range block.Matches {
 			match, home, away, err := convertMatch(phase, raw, loc)
+			if errors.Is(err, errSameClub) {
+				// The public feed has published the same badge id as home and away.
+				// That row cannot be a match between two clubs, and the opponent is not in the document.
+				continue
+			}
 			if err != nil {
 				return nil, nil, err
 			}
@@ -419,6 +428,9 @@ func convertMatch(phase string, raw rawMatch, loc *time.Location) (domain.MatchI
 	away, err := clubFromSide(raw.Away)
 	if err != nil {
 		return domain.MatchInput{}, domain.TeamInput{}, domain.TeamInput{}, fmt.Errorf("match %s away: %w", id, err)
+	}
+	if home.ExternalID == away.ExternalID {
+		return domain.MatchInput{}, domain.TeamInput{}, domain.TeamInput{}, fmt.Errorf("match %s lists club %s on both sides: %w", id, home.ExternalID, errSameClub)
 	}
 	kickoff, err := kickoffFromParts(raw.Date, string(raw.Time), loc)
 	if err != nil {

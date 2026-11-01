@@ -128,20 +128,121 @@ func TestFinishedScoreBeatsACancellationNote(t *testing.T) {
 	}
 }
 
+func TestParseMatchesSkipsARowThatListsOneClubTwice(t *testing.T) {
+	loc := time.FixedZone("UTC-3", -3*60*60)
+	body := []byte(`{"3a Fase":{"jogos":[
+		{"ref_jogo":"813493","num_jogo":"70","rodada":"1","data":" 16/04/2019","hora":"20:00","estadio":"Olímpico Pedro Ludovico","cidade":"Goiania","uf":"GO",
+		 "mandante":{"nome":"Bragantino","uf":"PA","url_escudo":"https://conteudo.cbf.com.br/clubes/35938/escudo.jpg","gols":"2","panaltis":""},
+		 "visitante":{"nome":"Bragantino","uf":"PA","url_escudo":"https://conteudo.cbf.com.br/clubes/35938/escudo.jpg","gols":"0","panaltis":""}},
+		{"ref_jogo":"1","num_jogo":"1","rodada":"1","data":" 01/02/2019","hora":"16:00","estadio":"A","cidade":"B","uf":"PR",
+		 "mandante":{"nome":"Operário","uf":"PR","url_escudo":"https://conteudo.cbf.com.br/clubes/20041/escudo.jpg","gols":"1","panaltis":""},
+		 "visitante":{"nome":"Operário","uf":"MS","url_escudo":"https://conteudo.cbf.com.br/clubes/20106/escudo.jpg","gols":"0","panaltis":""}}
+	]}}`)
+	matches, teams, err := ParseMatches(body, loc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 || matches[0].ExternalID != "1" || matches[0].HomeExternalID == matches[0].AwayExternalID {
+		t.Fatalf("matches = %+v", matches)
+	}
+	if len(teams) != 2 {
+		t.Fatalf("teams = %d", len(teams))
+	}
+	only := []byte(`{"3a Fase":{"jogos":[
+		{"ref_jogo":"813493","num_jogo":"70","rodada":"1","data":" 16/04/2019","hora":"20:00","estadio":"A","cidade":"B","uf":"PA",
+		 "mandante":{"nome":"Bragantino","uf":"PA","url_escudo":"https://conteudo.cbf.com.br/clubes/35938/escudo.jpg","gols":"2","panaltis":""},
+		 "visitante":{"nome":"Bragantino","uf":"PA","url_escudo":"https://conteudo.cbf.com.br/clubes/35938/escudo.jpg","gols":"0","panaltis":""}}
+	]}}`)
+	if _, _, err := ParseMatches(only, loc); err == nil {
+		t.Fatal("a document with only the duplicated club was accepted")
+	}
+}
+
 func TestSeasonExternalID(t *testing.T) {
 	body := readFixture(t, "testdata/catalog_sample.json")
-	id, err := SeasonExternalID(body, "1", 2026)
+	id, err := SeasonExternalID(body, "42", "1", 2026)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if id != "1260611" {
 		t.Fatalf("id = %s", id)
 	}
-	if _, err := SeasonExternalID(body, "1", 2010); err == nil {
+	if _, err := SeasonExternalID(body, "42", "1", 2010); err == nil {
 		t.Fatal("missing year was accepted")
 	}
-	if _, err := SeasonExternalID([]byte(`{"campeonatos":{}}`), "1", 2026); err == nil {
+	if _, err := SeasonExternalID([]byte(`{"campeonatos":{}}`), "42", "1", 2026); err == nil {
 		t.Fatal("object catalog was accepted")
+	}
+	// Category 4 is reused by other championships. The cup id comes only from championship 24.
+	cup := []byte(`{"campeonatos":[
+		{"id":"42","categorias":[{"id":"4","anos":"2026","id_campeonato":"999"}]},
+		{"id":"24","categorias":[
+			{"id":"55","anos":"2026","id_campeonato":"1260632"},
+			{"id":"4","anos":"2018,2026","id_campeonato":"12408,1260615"}
+		]}
+	]}`)
+	id, err = SeasonExternalID(cup, "24", "4", 2026)
+	if err != nil || id != "1260615" {
+		t.Fatalf("cup 2026 = %s err=%v", id, err)
+	}
+	id, err = SeasonExternalID(cup, "24", "4", 2018)
+	if err != nil || id != "12408" {
+		t.Fatalf("cup 2018 = %s err=%v", id, err)
+	}
+	if _, err := SeasonExternalID(cup, "24", "55", 2018); err == nil {
+		t.Fatal("feminino year was accepted as the professional category")
+	}
+}
+
+func TestAssembleCopaDoBrasilHasNoTable(t *testing.T) {
+	comp, ok := Lookup("copa-do-brasil")
+	if !ok {
+		t.Fatal("copa-do-brasil is not registered")
+	}
+	collected := time.Date(2026, 10, 31, 22, 0, 0, 0, time.UTC)
+	snap, err := Assemble(comp, 2026, "1260615", collected,
+		readFixture(t, "testdata/copa_matches_sample.json"),
+		[]byte("[]"),
+		nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snap.Standings) != 0 || snap.CompetitionCode != "copa-do-brasil" || snap.SeasonExternalID != "1260615" {
+		t.Fatalf("snapshot code=%s standings=%d id=%s", snap.CompetitionCode, len(snap.Standings), snap.SeasonExternalID)
+	}
+	if err := snap.Validate(domain.Limits{MinMatches: 1, MinStandings: 0, MaxStandings: 0}); err != nil {
+		t.Fatal(err)
+	}
+	if err := snap.Validate(comp.Limits()); err == nil {
+		t.Fatal("three matches passed the cup minimum")
+	}
+	byID := map[string]domain.MatchInput{}
+	for _, match := range snap.Matches {
+		byID[match.ExternalID] = match
+	}
+	penalties := byID["810242"]
+	if penalties.Status != domain.StatusFinished || penalties.Phase != "1a Fase" || *penalties.HomeScore != 1 || *penalties.AwayScore != 2 {
+		t.Fatalf("penalty match = %+v", penalties)
+	}
+	if penalties.HomePenalties == nil || penalties.AwayPenalties == nil || *penalties.HomePenalties != 0 || *penalties.AwayPenalties != 0 {
+		t.Fatalf("published 0-0 penalties = %+v %+v", penalties.HomePenalties, penalties.AwayPenalties)
+	}
+	if penalties.Kickoff == nil || penalties.Kickoff.Format(time.RFC3339) != "2018-02-07T21:30:00Z" {
+		t.Fatalf("2018 kickoff = %v", penalties.Kickoff)
+	}
+	draw := byID["810211"]
+	if draw.Status != domain.StatusFinished || *draw.HomeScore != 0 || *draw.AwayScore != 0 || draw.HomePenalties != nil {
+		t.Fatalf("0-0 = %+v", draw)
+	}
+	if draw.Kickoff == nil || draw.Kickoff.Format(time.RFC3339) != "2018-01-30T22:00:00Z" {
+		t.Fatalf("0-0 kickoff = %v", draw.Kickoff)
+	}
+	open := byID["835309"]
+	if open.Status != domain.StatusScheduled || open.HomeScore != nil || open.Phase != "Semi Finais" || open.RoundNumber != 1 {
+		t.Fatalf("scheduled semi = %+v", open)
+	}
+	if open.Kickoff == nil || open.Kickoff.Format(time.RFC3339) != "2026-11-01T19:00:00Z" || open.Venue != "Nubank Parque" {
+		t.Fatalf("scheduled kickoff = %v venue = %q", open.Kickoff, open.Venue)
 	}
 }
 

@@ -13,15 +13,15 @@ import (
 )
 
 const (
-	// CompetitionCode is Série A. The adapter also publishes Série B, C, and D.
-	CompetitionCode   = "brasileirao-serie-a"
-	catalogCampeonato = "42"
+	// CompetitionCode is Série A. The adapter also publishes Série B, C, D, and Copa do Brasil.
+	CompetitionCode = "brasileirao-serie-a"
 )
 
 var digitsOnly = regexp.MustCompile(`^[0-9]+$`)
 
-// Assemble turns the three collected documents into one snapshot.
+// Assemble turns the collected documents into one snapshot.
 // Standings names win over fixture names. A differing fixture name is kept as an alias.
+// A nil or empty standings document is valid only for a competition with no table (MaxRows 0).
 func Assemble(comp Competition, year int, externalID string, collected time.Time, matchesJSON, imtJSON, standingsHTML []byte) (domain.Snapshot, error) {
 	if !digitsOnly.MatchString(externalID) {
 		return domain.Snapshot{}, fmt.Errorf("season external id %q is not numeric", externalID)
@@ -39,9 +39,17 @@ func Assemble(comp Competition, year int, externalID string, collected time.Time
 		return domain.Snapshot{}, err
 	}
 	applySchedule(matches, changes)
-	standings, names, err := ParseStandings(standingsHTML)
-	if err != nil {
-		return domain.Snapshot{}, err
+	var standings []domain.StandingInput
+	names := map[string]string{}
+	if strings.TrimSpace(string(standingsHTML)) == "" {
+		if comp.MaxRows > 0 {
+			return domain.Snapshot{}, fmt.Errorf("standings page is empty")
+		}
+	} else {
+		standings, names, err = ParseStandings(standingsHTML)
+		if err != nil {
+			return domain.Snapshot{}, err
+		}
 	}
 	byID := make(map[string]*domain.TeamInput, len(teams))
 	for i := range teams {
@@ -111,15 +119,16 @@ type SeasonRef struct {
 	ExternalID string
 }
 
-// CatalogSeasons lists the years and championship ids of one category.
-// A missing category returns no seasons. The two lists must be the same length.
-func CatalogSeasons(body []byte, categoryID string) ([]SeasonRef, error) {
+// CatalogSeasons lists the years and championship ids of one catalog row.
+// Championship id and category id are both required. Category ids repeat across championships.
+// A missing row returns no seasons. The two lists must be the same length.
+func CatalogSeasons(body []byte, championshipID, categoryID string) ([]SeasonRef, error) {
 	var doc catalogDoc
 	if err := json.Unmarshal(body, &doc); err != nil {
 		return nil, fmt.Errorf("parse catalog: %w", err)
 	}
 	for _, championship := range doc.Campeonatos {
-		if championship.ID != catalogCampeonato {
+		if championship.ID != championshipID {
 			continue
 		}
 		for _, category := range championship.Categorias {
@@ -156,9 +165,9 @@ func CatalogSeasons(body []byte, categoryID string) ([]SeasonRef, error) {
 	return nil, nil
 }
 
-// SeasonExternalID finds the championship id for a category and year.
-func SeasonExternalID(body []byte, categoryID string, year int) (string, error) {
-	seasons, err := CatalogSeasons(body, categoryID)
+// SeasonExternalID finds the championship id for one catalog row and year.
+func SeasonExternalID(body []byte, championshipID, categoryID string, year int) (string, error) {
+	seasons, err := CatalogSeasons(body, championshipID, categoryID)
 	if err != nil {
 		return "", err
 	}
@@ -167,7 +176,7 @@ func SeasonExternalID(body []byte, categoryID string, year int) (string, error) 
 			return season.ExternalID, nil
 		}
 	}
-	return "", fmt.Errorf("catalog has no category %s season for %d", categoryID, year)
+	return "", fmt.Errorf("catalog has no championship %s category %s season for %d", championshipID, categoryID, year)
 }
 
 func splitList(value string) []string {

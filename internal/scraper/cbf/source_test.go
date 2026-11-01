@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -119,5 +120,78 @@ func TestFetchLoadsThePointsPhaseWhenTheYearPageHasNoTable(t *testing.T) {
 	}
 	if catalogHits != 1 {
 		t.Fatalf("catalog requests = %d paths=%v", catalogHits, paths)
+	}
+}
+
+func TestFetchCopaDoBrasilSkipsStandings(t *testing.T) {
+	catalog := []byte(`{"campeonatos":[
+		{"id":"42","categorias":[{"id":"4","anos":"2026","id_campeonato":"999"}]},
+		{"id":"24","categorias":[
+			{"id":"55","anos":"2026","id_campeonato":"1260632"},
+			{"id":"4","anos":"2026","id_campeonato":"1260615"}
+		]}
+	]}`)
+	matches := readFixture(t, "testdata/copa_matches_sample.json")
+	var paths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path)
+		switch r.URL.Path {
+		case "/api/cbf/campeonatos/anos":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(catalog)
+		case "/api/cbf/jogos/tabela-detalhada/campeonato/1260615":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(matches)
+		case "/api/cbf/campeonatos/1260615/imt":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte("[]"))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+	client, err := NewClient(ClientOptions{BaseURL: server.URL, MinInterval: time.Millisecond, Timeout: 2 * time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	source := NewSource(client)
+	codes, err := ParseCodes("all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(codes) != 5 || codes[4] != "copa-do-brasil" {
+		t.Fatalf("codes = %v", codes)
+	}
+	plans, err := source.Plan(context.Background(), []string{"copa-do-brasil"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plans) != 1 || plans[0].Year != 2026 || plans[0].ExternalID != "1260615" {
+		t.Fatalf("plans = %+v", plans)
+	}
+	snap, err := source.Fetch(context.Background(), "copa-do-brasil", 2026, time.Unix(100, 0).UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snap.CompetitionName != "Copa do Brasil" || len(snap.Matches) != 3 || len(snap.Standings) != 0 {
+		t.Fatalf("snapshot name=%s matches=%d standings=%d", snap.CompetitionName, len(snap.Matches), len(snap.Standings))
+	}
+	for _, path := range paths {
+		if strings.Contains(path, "tabelas") || strings.Contains(path, "999") || strings.Contains(path, "1260632") {
+			t.Fatalf("unexpected path %s in %v", path, paths)
+		}
+	}
+	want := []string{
+		"/api/cbf/campeonatos/anos",
+		"/api/cbf/jogos/tabela-detalhada/campeonato/1260615",
+		"/api/cbf/campeonatos/1260615/imt",
+	}
+	if len(paths) != len(want) {
+		t.Fatalf("paths = %v", paths)
+	}
+	for i := range want {
+		if paths[i] != want[i] {
+			t.Fatalf("paths = %v", paths)
+		}
 	}
 }
