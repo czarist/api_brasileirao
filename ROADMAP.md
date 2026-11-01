@@ -1,6 +1,6 @@
 # Roadmap
 
-The running API covers Série A, Série B, Série C, and Série D for every year the CBF catalog lists: real collection, PostgreSQL, read-only HTTP, OpenAPI, and Docker. Phase 10 is not implemented.
+The running API covers Série A, Série B, Série C, Série D, the professional Copa do Brasil, the professional Campeonato Mineiro, and the adult state divisions in phase 13, including Baianão Série A and Série B: real collection, PostgreSQL, read-only HTTP, OpenAPI, and Docker. Phase 10 is not implemented. The state federations that are not listed in phase 13 are not collected.
 
 ## 1. Legacy diagnosis and source validation
 
@@ -137,5 +137,84 @@ Not part of the current implementation.
 
 - [ ] Seasons before the ones the chosen source lists.
 - [ ] Scorers and player statistics.
-- [ ] A second source adapter if CBF pages change or coverage is insufficient.
+- [ ] A second source adapter if CBF pages change or coverage is insufficient. The FMF adapter in phase 12 covers the Mineiro professional divisions only. It does not close this item.
 - [ ] Stronger in-progress detection when a source publishes that state. The enum exists; the CBF adapter does not emit `in_progress`.
+
+## 11. Copa do Brasil results
+
+Objective: serve the professional Copa do Brasil match results for every year the CBF catalog lists, including the current year.
+
+Depends on: phases 4 to 9.
+
+- [x] Championship `24`, professional category `4`. Other categories that reuse the name are not collected.
+- [x] Matches, phases, scores, and penalty scores from the public fixture feed. No standings table is invented. The standings route returns an empty list.
+- [x] A fixture row that lists the same club id on both sides is omitted. Two clubs that share a name and have different badge ids both stay.
+
+Acceptance, checked on 2026-10-31 against the Compose database and the API:
+
+- Nine seasons, 2018–2026. Match counts: 2018 and 2020 have 120. 2019 has 118. 2021–2025 have 122. 2026 has 154. Standings are 0 in every year. `GET /api/v1/competitions/copa-do-brasil/seasons/2026/standings` returned 200 and an empty list.
+- 2018 final, served by the matches route: Cruzeiro Esporte Clube 1-0 Corinthians, then Corinthians 1-2 Cruzeiro Esporte Clube. Both finished, with null penalty scores.
+- 2026 has four scheduled semi-finals with null scores: Palmeiras vs Vasco da Gama Saf, Grêmio vs Atlético Mineiro, and the return legs. The feed has no final.
+- 2019 omitted matches `813493` and `813503`. Both sides used club id `35938` and the name Bragantino. The other 118 matches were stored.
+- Série A 2018–2026 stayed at 380 matches and 20 standings. Série A 2026 was still led by Flamengo with 73 points.
+
+## 12. Campeonato Mineiro
+
+Objective: serve the adult professional divisions published by the Federação Mineira de Futebol, under the names on that catalog.
+
+Depends on: phases 4 to 9.
+
+- [x] Módulo I, Módulo II, and Segunda Divisão. Youth, women's, and amateur competitions on the same site are not collected. No Série A, B, or C is invented.
+- [x] Every year the FMF select lists. On 2026-11-01 that was Módulo I 2013–2026 and the other two divisions 2014–2026.
+- [x] Matches for every published phase. The classification table is stored once per club. A later table that only repeats those clubs is skipped.
+- [ ] Every remaining state federation. Each one is an open task in phase 13. Distrito Federal, Goiás, Pernambuco, Maranhão, Mato Grosso, Alagoas, and Bahia are collected.
+
+Acceptance, checked on 2026-11-01 against the Compose database and the API:
+
+- 40 seasons. Módulo I 2026 has 53 matches and 12 standings. Group A is led by Atlético SAF with 14 points. `GET /api/v1/competitions/mineiro-modulo-i/seasons/2026/matches?page_size=2` returned total 53. The first row is Uberlândia S.A.F 0-0 Tombense, kickoff `2026-01-10T19:00:00Z`, phase `CLASSIFICATÓRIA`.
+- Módulo I 2020 has 75 matches, one of them with null scores. Módulo II 2026 has 74 matches and stores Ipatinga at -2 points.
+- Série A 2018–2026 stayed at 380 matches and 20 standings.
+- The long-running worker container was not recreated. Its hourly job still runs the previous binary.
+
+## 13. State federations, one catalog at a time
+
+Objective: serve the adult top divisions each state federation publishes, under the name on that catalog. Do not invent a division the page does not list.
+
+Depends on: phases 4 to 9.
+
+- [x] Distrito Federal, FFDF, `www.ffdf.com.br`, source `ffdf`. Candangão Série A and Série B, 2023–2026. No Série C.
+- [x] Goiás, FGF, `fgf.esp.br`, source `fgf-go`. This is not `www.fgf.com.br`. 1ª Divisão, Divisão de Acesso, and 3ª Divisão. 1ª Divisão 2025 was not stored. 3ª Divisão has no 2020 card.
+- [x] Pernambuco, FPF, `www.fpf-pe.com.br`, source `fpf-pe`. A1, A2, and A3 when the catalog lists them. A1 and A2 2019 and A3 2024 were not stored.
+- [x] Maranhão, `www.futebolmaranhense.com.br`, source `fmf-ma`. Série A and Série B. No Série C. Three seasons published no classification and were not stored.
+- [x] Mato Grosso, `www.fmfmt.com.br`, source `fmf-mt`. 1ª Divisão 2020–2026 and II Divisão 2021–2026. No 3ª Divisão.
+- [x] Alagoas, FAF, `www.futeboldealagoas.net`, source `faf-al`. Série A for 2020 and 2022–2026. Série B for 2022–2024. The 2021 catalog has no adult Série A. Later B cards are Sub-23. No Série C.
+- [x] Bahia, FBF, `www.fbf.org.br`, source `fbf`. Baianão Série A 2011–2026 and Série B 2011–2026. Série A 2027 listed five fixtures and was not stored. No Série C.
+- [ ] Acre. The probed hosts returned 403 or did not resolve. Do not bypass the 403.
+- [ ] Amapá, `fafamapa.com.br`. The professional pages are a landing site, not a match and standings catalog. No Série C in the menu.
+- [ ] Amazonas, `fafamazonas.com.br`. Adult Série A 2023–2026 and Série B 2022–2026 are published. No adult Série C. Each season page is one round, with the knockout blocks repeated on the round pages.
+- [ ] Ceará. No current public season catalog was confirmed.
+- [ ] Espírito Santo, `futebolcapixaba.com`. The page did not show adult division names.
+- [ ] Mato Grosso do Sul, `www.futebolms.com.br`. The page links out to a second host. That host stays off the allowlist until a full public season page is fetched.
+- [ ] Pará, `www.fpfpara.com.br`. Collect A1, A2, and A3. Pré-A3 is a fourth published name. Do not store it as Série C.
+- [ ] Paraíba. The TLS connection closed. Do not disable certificate checks.
+- [ ] Paraná, `federacaopr.com.br`. The professional page did not yield a match catalog.
+- [ ] Piauí. Certificate validation failed. Do not disable certificate checks.
+- [ ] Rio de Janeiro, `www.fferj.com.br`. Five masculine divisions are published: Série A, A2, B1, B2, and C. Copa Rio, women's, and youth stay out. A second host stays off the allowlist until a full public season page is fetched.
+- [ ] Rio Grande do Norte, `www.fnf.org.br`. No competition catalog was confirmed.
+- [ ] Rio Grande do Sul, `www.fgf.com.br`. This is not Goiás `fgf.esp.br`. The adult divisions are Gauchão, Gauchão Série A2, and Gauchão Série B. Copa FGF and Recopa stay out. The classification body on the fetched page was empty.
+- [ ] Rondônia, `www.ffer.com.br`. No match catalog was confirmed.
+- [ ] Roraima. No official host resolved.
+- [ ] Santa Catarina, `fcf.com.br`. Série A, Série B, and Série C are published.
+- [ ] São Paulo, `www.futebolpaulista.com.br`. The host returned 403. Do not bypass it. The adult divisions are A1, A2, and A3.
+- [ ] Sergipe. No official host was confirmed.
+- [ ] Tocantins, `www.ftf.org.br`. No competition catalog was found.
+- [ ] Goiano 1ª Divisão 2025. Match `41180` lists the same club twice, so that season was not stored.
+- [ ] Pernambucano A1 and A2 2019 published no matches. A3 2024 badge `35767` has no published name.
+- [ ] Maranhense Série A 2026 and Série B 2024 and 2026 published no classification.
+
+Acceptance, checked on 2026-11-01 against the Compose database and the API:
+
+- Alagoano Série A 2026: 34 matches and 8 standings. `GET /api/v1/competitions/alagoano-serie-a/seasons/2026/standings` returned source `faf-al`, Asa, `GRUPO A`, 17 points, 7 played.
+- Baianão Série A 2026: 48 matches and 10 standings. `GET /api/v1/competitions/baiano-serie-a/seasons/2026/standings` returned source `fbf`, Bahia, `Grupo 1`, 23 points, 9 played. Série B 2013 has 46 matches and 10 standings.
+- Série A 2026 stayed source `cbf`, led by Flamengo with 73 points.
+- The hourly worker container `df275f704aeb` was still the previous image after the Bahia one-shots.

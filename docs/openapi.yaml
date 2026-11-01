@@ -2,10 +2,10 @@ openapi: 3.1.0
 info:
   title: API Brasileirão
   version: 0.1.0
-  summary: Read-only Campeonato Brasileiro API for Série A, Série B, Série C, and Série D.
+  summary: Read-only API for Campeonato Brasileiro Série A, Série B, Série C, and Série D, Copa do Brasil, and the professional Campeonato Mineiro.
   description: |
-    Public read API for data collected from the CBF public site and stored in PostgreSQL.
-    This project is not affiliated with the CBF, any club, or any broadcaster.
+    Public read API for data collected from public federation sites and stored in PostgreSQL.
+    This project is not affiliated with the CBF, the FMF, any club, or any broadcaster.
 
     The API does not scrape on request and does not promise live scores. The worker collects
     the configured competitions and seasons on its interval (one hour by default). A payload
@@ -14,8 +14,19 @@ info:
     `collection_status: never_collected` means no successful collection has been stored.
     Unknown scores and unknown kickoffs are null. The standings figures are the official
     table, including a goal difference that may not equal goals for minus goals against.
-    Grouped divisions repeat the position inside each group. `in_progress` is reserved and
-    is not emitted by the current collector.
+    Grouped divisions repeat the position inside each group. Copa do Brasil is knockout
+    and has no standings table, so that list is empty. The Campeonato Mineiro divisions
+    are Módulo I, Módulo II, and Segunda Divisão, under those published names.
+    A later phase table that only repeats clubs already in the classification is not
+    stored. The FMF table does not publish cards, so `yellow_cards` and `red_cards`
+    are 0 for those seasons. Penalty scores are stored when the
+    source publishes them, including a published 0. `in_progress` is reserved and
+    is not emitted by the current collector. The FBF table does not publish cards,
+    so `yellow_cards` and `red_cards` are 0 for Baianão seasons. Its win percentage
+    is a decimal rounded to an integer by the first decimal digit. `source.name`
+    is the adapter that stored the rows (`cbf`, `fmf`, `ffdf`, `fgf-go`, `fpf-pe`,
+    `fmf-ma`, `fmf-mt`, `faf-al`, or `fbf`).
+    On a list of every competition it is the adapter of the newest stored row.
 servers:
   - url: /
     description: The API that served this document
@@ -216,7 +227,7 @@ paths:
         - $ref: "#/components/parameters/Year"
       responses:
         "200":
-          description: Official table ordered by group, then position. Points are not recalculated. Grouped divisions repeat position.
+          description: Official table ordered by group, then position. Points are not recalculated. Grouped divisions repeat position. A competition with no published table, such as Copa do Brasil, returns an empty list.
           content:
             application/json:
               schema:
@@ -414,7 +425,7 @@ components:
       type: object
       required: [name, collected_at, last_success_at, stale, collection_status]
       properties:
-        name: {type: string, examples: [cbf]}
+        name: {type: string, examples: [cbf, fmf, ffdf, fgf-go, fpf-pe, fmf-ma, fmf-mt, faf-al, fbf]}
         collected_at:
           type: [string, "null"]
           format: date-time
