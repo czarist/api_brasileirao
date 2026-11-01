@@ -50,7 +50,7 @@ func (s *Source) Plan(ctx context.Context, codes []string) ([]SeasonPlan, error)
 		if !ok {
 			return nil, fmt.Errorf("unsupported competition %s", code)
 		}
-		seasons, err := CatalogSeasons(body, comp.CategoryID)
+		seasons, err := CatalogSeasons(body, comp.CatalogID, comp.CategoryID)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", code, err)
 		}
@@ -81,7 +81,7 @@ func (s *Source) Fetch(ctx context.Context, competition string, year int, collec
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
-	externalID, err := SeasonExternalID(body, comp.CategoryID, year)
+	externalID, err := SeasonExternalID(body, comp.CatalogID, comp.CategoryID, year)
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
@@ -93,9 +93,12 @@ func (s *Source) Fetch(ctx context.Context, competition string, year int, collec
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
-	standings, err := s.standingsPage(ctx, comp, year)
-	if err != nil {
-		return domain.Snapshot{}, err
+	var standings []byte
+	if comp.MaxRows > 0 {
+		standings, err = s.standingsPage(ctx, comp, year)
+		if err != nil {
+			return domain.Snapshot{}, err
+		}
 	}
 	return Assemble(comp, year, externalID, collected, matches, imt, standings)
 }
@@ -115,6 +118,9 @@ func (s *Source) catalogBody(ctx context.Context) ([]byte, error) {
 }
 
 func (s *Source) standingsPage(ctx context.Context, comp Competition, year int) ([]byte, error) {
+	if comp.Slug == "" {
+		return nil, fmt.Errorf("competition %s has no standings page", comp.Code)
+	}
 	path := fmt.Sprintf("/futebol-brasileiro/tabelas/campeonato-brasileiro/%s/%d", comp.Slug, year)
 	body, err := s.client.GetHTML(ctx, path)
 	if err != nil {
